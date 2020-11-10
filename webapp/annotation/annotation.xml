@@ -1,0 +1,190 @@
+<edmx:Edmx xmlns:edmx="http://docs.oasis-open.org/odata/ns/edmx" Version="4.0">
+	<edmx:Reference Uri="/sap/opu/odata/sap/ZUI_FIN_VIMMANUALPAYMENT/$metadata">
+		<edmx:Include Alias="Metadata" Namespace="cds_zsd_fin_vimmanualpayment"/>
+	</edmx:Reference>
+	<edmx:Reference Uri="https://wiki.scn.sap.com/wiki/download/attachments/448470968/UI.xml?api=v2">
+		<edmx:Include Alias="UI" Namespace="com.sap.vocabularies.UI.v1"/>
+	</edmx:Reference>
+	<edmx:Reference Uri="https://wiki.scn.sap.com/wiki/download/attachments/448470974/Common.xml?api=v2">
+		<edmx:Include Alias="Common" Namespace="com.sap.vocabularies.Common.v1"/>
+	</edmx:Reference>
+	<edmx:DataServices>
+		<Schema xmlns="http://docs.oasis-open.org/odata/ns/edm" Namespace="FI-112.annotation.annotation.cds_zsd_fin_vimmanualpayment">
+			<Annotations Target="Metadata.LineItemType">
+				<Annotation Term="UI.LineItem">
+					<Collection>
+						<Record Type="UI.DataField">
+							<PropertyValue Property="Value" Path="ItemNumber"/>
+							<Annotation Term="Common.FieldControl" EnumMember="Common.FieldControlType/ReadOnly"/>
+						</Record>
+						<Record Type="UI.DataField">
+							<PropertyValue Property="Value" Path="Description"/>
+						</Record>
+						<Record Type="UI.DataField">
+							<PropertyValue Property="Value" Path="Amount"/>
+						</Record>
+						<Record Type="UI.DataField">
+							<PropertyValue Property="Value" Path="CreditDebit"/>
+						</Record>
+						<Record Type="UI.DataField">
+							<PropertyValue Property="Value" Path="TaxCode"/>
+						</Record>
+						<Record Type="UI.DataField">
+							<PropertyValue Property="Value" Path="GlAccount"/>
+						</Record>
+						<Record Type="UI.DataField">
+							<PropertyValue Property="Value" Path="CostCenter"/>
+						</Record>
+						<Record Type="UI.DataField">
+							<PropertyValue Property="Value" Path="ProfitCenter"/>
+						</Record>
+						<Record Type="UI.DataField">
+							<PropertyValue Property="Value" Path="WbsElement"/>
+						</Record>
+					</Collection>
+				</Annotation>
+			</Annotations>
+			<Annotations Target="Metadata.GeneralInfoType/Title">
+				<Annotation Term="Common.ValueListWithFixedValues" Bool="true"/>
+				<Annotation Term="Common.FieldControl" EnumMember="Common.FieldControlType/Mandatory"/>
+				<Annotation Term="Common.ValueList">
+					<Record Type="Common.ValueListType">
+						<PropertyValue Property="CollectionPath" String="ZB_FIN_TitleVH"/>
+						<PropertyValue Property="Parameters">
+							<Collection>
+								<Record Type="Common.ValueListParameterInOut">
+									<PropertyValue Property="LocalDataProperty" PropertyPath="Title"/>
+									<PropertyValue Property="ValueListProperty" String="StandardTextKey"/>
+								</Record>
+								<Record Type="Common.ValueListParameterDisplayOnly">
+									<PropertyValue Property="ValueListProperty" String="Description"/>
+								</Record>
+							</Collection>
+						</PropertyValue>
+					</Record>
+				</Annotation>
+			</Annotations>
+			<Annotations Target="Metadata.ZB_FIN_CreditDebitVHType/CreditDebit">
+				<Annotation Term="Common.Text" Path="Description"/>
+			</Annotations>
+			<Annotations Target="Metadata.LineItemType/CreditDebit">
+				<Annotation Term="Common.ValueListWithFixedValues" Bool="true"/>
+				<Annotation Term="Common.ValueList">
+					<Record Type="Common.ValueListType">
+						<PropertyValue Property="CollectionPath" String="ZB_FIN_CreditDebitVH"/>
+						<PropertyValue Property="Parameters">
+							<Collection>
+								<Record Type="Common.ValueListParameterInOut">
+									<PropertyValue Property="LocalDataProperty" PropertyPath="CreditDebit"/>
+									<PropertyValue Property="ValueListProperty" String="CreditDebit"/>
+								</Record>
+								<Record Type="Common.ValueListParameterDisplayOnly">
+									<PropertyValue Property="ValueListProperty" String="Description"/>
+								</Record>
+							</Collection>
+						</PropertyValue>
+					</Record>
+				</Annotation>
+			</Annotations>
+			<Annotations Target="Metadata.ZB_FIN_CreditDebitVHType/Description">
+				<Annotation Term="Common.Text" Path="Description"/>
+			</Annotations>
+			<Annotations Target="Metadata.GeneralInfoType/CompanyCode">
+				<Annotation Term="Common.Label" String="{@i18n&gt;companyCodeLabel}"/>
+			</Annotations>
+			<Annotations Target="Metadata.GeneralInfoType/SupplierNumber">
+				<Annotation Term="Common.Label" String="{@i18n&gt;supplierNumberLabel}"/>
+			</Annotations>
+			<Annotations Target="Metadata.GeneralInfoType/SupplierName">
+				<Annotation Term="Common.Label" String="{@i18n&gt;supplierNameLabel}"/>
+			</Annotations>
+			<Annotations Target="Metadata.GeneralInfoType/AbnNumber">
+				<Annotation Term="Common.FieldControl"/>
+				<Annotation Term="Common.Label" String="{@i18n&gt;abnNumberLabel}"/>
+			</Annotations>
+			<Annotations Target="Metadata.GeneralInfoType/ReferenceNumber">
+				<Annotation Term="Common.Label" String="{@i18n&gt;referenceNumberLabel}"/>
+			</Annotations>
+			<Annotations Target="Metadata.GeneralInfoType/DocumentDate">
+				<Annotation Term="Common.Label" String="{@i18n&gt;documentDateLabel}"/>
+			</Annotations>
+			<Annotations Target="Metadata.GeneralInfoType/GrossAmount">
+				<Annotation Term="Common.Label" String="{@i18n&gt;grossAmountLabel}"/>
+			</Annotations>
+			<Annotations Target="Metadata.GeneralInfoType/TaxAmountIndicator">
+				<Annotation Term="Common.Label" String="{@i18n&gt;taxAmountIndicatorLabel}"/>
+			</Annotations>
+			<Annotations Target="Metadata.GeneralInfoType/TaxAmount">
+				<Annotation Term="Common.Label" String="{@i18n&gt;taxAmountLabel}"/>
+			</Annotations>
+			<Annotations Target="Metadata.GeneralInfoType/Description">
+				<Annotation Term="Common.Label" String="{@i18n&gt;descriptionLabel}"/>
+			</Annotations>
+			<Annotations Target="Metadata.GeneralInfoType/RequesterID">
+				<Annotation Term="Common.Label" String="{@i18n&gt;requesterIDLabel}"/>
+			</Annotations>
+			<Annotations Target="Metadata.GeneralInfoType/CmIndicator">
+				<Annotation Term="Common.Label" String="{@i18n&gt;creditMemoLabel}"/>
+			</Annotations>
+			<Annotations Target="Metadata.GeneralInfoType/CmRefDat">
+				<Annotation Term="Common.Label" String="{@i18n&gt;creditMemoReferenceDateLabel}"/>
+			</Annotations>
+			<Annotations Target="Metadata.GeneralInfoType/CmRefNo">
+				<Annotation Term="Common.Label" String="{@i18n&gt;creditMemoReferenceNumberLabel}"/>
+			</Annotations>
+			<Annotations Target="Metadata.GeneralInfoType/Title">
+				<Annotation Term="Common.Label" String="{@i18n&gt;titleLabel}"/>
+			</Annotations>
+			<Annotations Target="Metadata.GeneralInfoType/Name">
+				<Annotation Term="Common.FieldControl" EnumMember="Common.FieldControlType/Mandatory"/>
+				<Annotation Term="Common.Label" String="{@i18n&gt;nameLabel}"/>
+			</Annotations>
+			<Annotations Target="Metadata.GeneralInfoType/Street">
+				<Annotation Term="Common.FieldControl" EnumMember="Common.FieldControlType/Mandatory"/>
+				<Annotation Term="Common.Label" String="{@i18n&gt;streetLabel}"/>
+			</Annotations>
+			<Annotations Target="Metadata.GeneralInfoType/PostCode">
+				<Annotation Term="Common.FieldControl" EnumMember="Common.FieldControlType/Mandatory"/>
+				<Annotation Term="Common.Label" String="{@i18n&gt;postCodeLabel}"/>
+			</Annotations>
+			<Annotations Target="Metadata.GeneralInfoType/City">
+				<Annotation Term="Common.FieldControl" EnumMember="Common.FieldControlType/Mandatory"/>
+				<Annotation Term="Common.Label" String="{@i18n&gt;cityLabel}"/>
+			</Annotations>
+			<Annotations Target="Metadata.GeneralInfoType/Country">
+				<Annotation Term="Common.FieldControl" EnumMember="Common.FieldControlType/Mandatory"/>
+				<Annotation Term="Common.Label" String="{@i18n&gt;countryLabel}"/>
+			</Annotations>
+			<Annotations Target="Metadata.GeneralInfoType/Email">
+				<Annotation Term="Common.Label" String="{@i18n&gt;emailLabel}"/>
+			</Annotations>
+			<Annotations Target="Metadata.GeneralInfoType/BankCountry">
+				<Annotation Term="Common.FieldControl" EnumMember="Common.FieldControlType/Mandatory"/>
+				<Annotation Term="Common.Label" String="{@i18n&gt;bankCountryLabel}"/>
+			</Annotations>
+			<Annotations Target="Metadata.GeneralInfoType/BankName">
+				<Annotation Term="Common.FieldControl" EnumMember="Common.FieldControlType/Mandatory"/>
+				<Annotation Term="Common.Label" String="{@i18n&gt;bankNameLabel}"/>
+			</Annotations>
+			<Annotations Target="Metadata.GeneralInfoType/BankKey">
+				<Annotation Term="Common.FieldControl" EnumMember="Common.FieldControlType/Mandatory"/>
+				<Annotation Term="Common.Label" String="{@i18n&gt;bankKeyLabel}"/>
+			</Annotations>
+			<Annotations Target="Metadata.GeneralInfoType/BankAccount">
+				<Annotation Term="Common.FieldControl" EnumMember="Common.FieldControlType/Mandatory"/>
+				<Annotation Term="Common.Label" String="{@i18n&gt;bankAccountLabel}"/>
+			</Annotations>
+			<Annotations Target="Metadata.GeneralInfoType/Iban">
+				<Annotation Term="Common.Label" String="{@i18n&gt;ibanLabel}"/>
+			</Annotations>
+			<Annotations Target="Metadata.GeneralInfoType/InstructionKey">
+				<Annotation Term="Common.FieldControl" EnumMember="Common.FieldControlType/Mandatory"/>
+				<Annotation Term="Common.Label" String="{@i18n&gt;instructionKeyLabel}"/>
+			</Annotations>
+			<Annotations Target="Metadata.ZB_FIN_TitleVHType/StandardTextKey">
+				<Annotation Term="Common.Text" Path="Description"/>
+			</Annotations>
+			<Annotations Target="Metadata.LineItemType/ItemNumber"/>
+		</Schema>
+	</edmx:DataServices>
+</edmx:Edmx>

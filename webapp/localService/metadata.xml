@@ -1,0 +1,268 @@
+<?xml version="1.0" encoding="utf-8"?>
+<edmx:Edmx Version="1.0" xmlns:edmx="http://schemas.microsoft.com/ado/2007/06/edmx"
+	xmlns:m="http://schemas.microsoft.com/ado/2007/08/dataservices/metadata" xmlns:sap="http://www.sap.com/Protocols/SAPData">
+	<edmx:Reference
+		Uri="https://webidecp-s0020231377trial.dispatcher.hanatrial.ondemand.com/destinations/S4H/sap/opu/odata/IWFND/CATALOGSERVICE;v=2/Vocabularies(TechnicalName='%2FIWBEP%2FVOC_COMMON',Version='0001',SAP__Origin='')/$value"
+		xmlns:edmx="http://docs.oasis-open.org/odata/ns/edmx"><edmx:Include Namespace="com.sap.vocabularies.Common.v1" Alias="Common"/></edmx:Reference>
+	<edmx:Reference
+		Uri="https://webidecp-s0020231377trial.dispatcher.hanatrial.ondemand.com/destinations/S4H/sap/opu/odata/IWFND/CATALOGSERVICE;v=2/Vocabularies(TechnicalName='%2FIWBEP%2FVOC_CAPABILITIES',Version='0001',SAP__Origin='')/$value"
+		xmlns:edmx="http://docs.oasis-open.org/odata/ns/edmx"><edmx:Include Namespace="Org.OData.Capabilities.V1" Alias="Capabilities"/></edmx:Reference>
+	<edmx:Reference
+		Uri="https://webidecp-s0020231377trial.dispatcher.hanatrial.ondemand.com/destinations/S4H/sap/opu/odata/IWFND/CATALOGSERVICE;v=2/Vocabularies(TechnicalName='%2FIWBEP%2FVOC_COMMUNICATION',Version='0001',SAP__Origin='')/$value"
+		xmlns:edmx="http://docs.oasis-open.org/odata/ns/edmx"><edmx:Include Namespace="com.sap.vocabularies.Communication.v1" Alias="Communication"/></edmx:Reference>
+	<edmx:Reference
+		Uri="https://webidecp-s0020231377trial.dispatcher.hanatrial.ondemand.com/destinations/S4H/sap/opu/odata/IWFND/CATALOGSERVICE;v=2/Vocabularies(TechnicalName='%2FIWBEP%2FVOC_AGGREGATION',Version='0001',SAP__Origin='')/$value"
+		xmlns:edmx="http://docs.oasis-open.org/odata/ns/edmx"><edmx:Include Namespace="Org.OData.Aggregation.V1" Alias="Aggregation"/></edmx:Reference>
+	<edmx:Reference
+		Uri="https://webidecp-s0020231377trial.dispatcher.hanatrial.ondemand.com/destinations/S4H/sap/opu/odata/IWFND/CATALOGSERVICE;v=2/Vocabularies(TechnicalName='%2FIWBEP%2FVOC_PERSONALDATA',Version='0001',SAP__Origin='')/$value"
+		xmlns:edmx="http://docs.oasis-open.org/odata/ns/edmx"><edmx:Include Namespace="com.sap.vocabularies.PersonalData.v1" Alias="PersonalData"/></edmx:Reference>
+	<edmx:DataServices m:DataServiceVersion="2.0">
+		<Schema Namespace="cds_zsd_fin_vimmanualpayment" xml:lang="en" sap:schema-version="1" xmlns="http://schemas.microsoft.com/ado/2008/09/edm">
+			<EntityType Name="I_CurrencyType" sap:label="Currency" sap:value-list="true" sap:content-version="1">
+				<Key><PropertyRef Name="Currency"/></Key><Property Name="Currency" Type="Edm.String" Nullable="false" MaxLength="5" sap:text="Currency_Text" sap:label="Currency"
+					sap:quickinfo="Currency Key" sap:semantics="currency-code"/><Property Name="Currency_Text" Type="Edm.String" MaxLength="40" sap:label="Description" sap:creatable="false" sap:updatable="false"/><Property Name="Decimals" Type="Edm.Byte" sap:label="Decimal Places" sap:quickinfo="Number of decimal places"/><Property Name="CurrencyISOCode" Type="Edm.String" MaxLength="3" sap:display-format="UpperCase" sap:label="ISO Code"
+					sap:quickinfo="ISO Currency Code"/><Property Name="AlternativeCurrencyKey" Type="Edm.String" MaxLength="3" sap:display-format="UpperCase" sap:label="Alternative Key"/><Property Name="IsPrimaryCurrencyForISOCrcy" Type="Edm.Boolean" sap:display-format="UpperCase" sap:label="Primary"
+					sap:quickinfo="Primary SAP Currency Code for ISO Code"/></EntityType>
+			<EntityType Name="ZB_FIN_BankCountryVHType" sap:label="VH: Bank Country" sap:value-list="true" sap:content-version="1">
+				<Key><PropertyRef Name="StandardTextKey"/></Key><Property Name="StandardTextKey" Type="Edm.String" Nullable="false" MaxLength="3" sap:display-format="UpperCase" sap:text="Description"
+					sap:label="Bank Country" sap:quickinfo="Bank country key"/><Property Name="BankKey" Type="Edm.String" MaxLength="15" sap:display-format="UpperCase" sap:label="Bank Key" sap:quickinfo="Bank Keys"/><Property Name="Description" Type="Edm.String" MaxLength="60" sap:label="Bank name" sap:quickinfo="Name of bank"/></EntityType>
+			<EntityType Name="ZB_FIN_CostCenterVHType" sap:label="VH: Cost Center" sap:value-list="true" sap:content-version="1">
+				<Key><PropertyRef Name="StandardTextKey"/></Key><Property Name="StandardTextKey" Type="Edm.String" Nullable="false" MaxLength="10" sap:display-format="UpperCase" sap:text="Description"
+					sap:label="Cost Center"/><Property Name="Description" Type="Edm.String" MaxLength="20" sap:label="Name" sap:quickinfo="General Name"/></EntityType>
+			<EntityType Name="ZB_FIN_GlAccountVHType" sap:label="VH: GL Account" sap:value-list="true" sap:content-version="1">
+				<Key><PropertyRef Name="StandardTextKey"/></Key><Property Name="StandardTextKey" Type="Edm.String" Nullable="false" MaxLength="10" sap:display-format="UpperCase" sap:text="Description"
+					sap:label="G/L Account" sap:quickinfo="G/L Account Number"/><Property Name="Description" Type="Edm.String" MaxLength="20" sap:label="Short Text" sap:quickinfo="G/L account short text"/></EntityType>
+			<EntityType Name="ZB_FIN_InstructionKeyVHType" sap:label="VH: Instruction Key" sap:value-list="true" sap:content-version="1">
+				<Key><PropertyRef Name="StandardTextKey"/></Key><Property Name="StandardTextKey" Type="Edm.String" Nullable="false" MaxLength="2" sap:display-format="UpperCase" sap:text="Description"
+					sap:label="Instruction key" sap:quickinfo="Instruction key for data medium exchange"/><Property Name="Description" Type="Edm.String" MaxLength="25" sap:label="Additional Info."
+					sap:quickinfo="Instruction Key Additional Information"/></EntityType>
+			<EntityType Name="ZB_FIN_ProfitCenterVHType" sap:label="VH: Profit Center" sap:value-list="true" sap:content-version="1">
+				<Key><PropertyRef Name="StandardTextKey"/></Key><Property Name="StandardTextKey" Type="Edm.String" Nullable="false" MaxLength="10" sap:display-format="UpperCase" sap:text="Description"
+					sap:label="Profit Center"/><Property Name="Description" Type="Edm.String" MaxLength="20" sap:label="Name" sap:quickinfo="General Name"/></EntityType>
+			<EntityType Name="ZB_FIN_RequesterIDVHType" sap:label="VH: Requestor ID" sap:value-list="true" sap:content-version="1">
+				<Key><PropertyRef Name="StandardTextKey"/></Key><Property Name="StandardTextKey" Type="Edm.String" Nullable="false" MaxLength="35" sap:display-format="UpperCase" sap:text="Description"
+					sap:label="User Mapping Object" sap:quickinfo="Open Text User Mapping Object ID"/><Property Name="Description" Type="Edm.String" MaxLength="12" sap:display-format="UpperCase" sap:label="User"
+					sap:quickinfo="User Name in User Master Record"/></EntityType>
+			<EntityType Name="ZB_FIN_SupplierNumberVHType" sap:label="VH: Supplier Number" sap:value-list="true" sap:content-version="1">
+				<Key><PropertyRef Name="StandardTextKey"/></Key><Property Name="StandardTextKey" Type="Edm.String" Nullable="false" MaxLength="10" sap:display-format="UpperCase" sap:text="Description"
+					sap:label="Vendor" sap:quickinfo="Account Number of Vendor or Creditor"/><Property Name="Description" Type="Edm.String" MaxLength="35" sap:label="Name" sap:quickinfo="Name 1"/><Property Name="AbnNumber" Type="Edm.String" MaxLength="20" sap:display-format="UpperCase" sap:label="VAT Registration No."
+					sap:quickinfo="VAT Registration Number"/></EntityType>
+			<EntityType Name="ZB_FIN_TaxCodeCVHType" sap:label="VH: Tax Code" sap:value-list="true" sap:content-version="1">
+				<Key><PropertyRef Name="StandardTextKey"/></Key><Property Name="StandardTextKey" Type="Edm.String" Nullable="false" MaxLength="2" sap:display-format="UpperCase" sap:text="Description"
+					sap:label="Tax Code" sap:quickinfo="Tax on sales/purchases code"/><Property Name="Description" Type="Edm.String" MaxLength="50" sap:label="Description" sap:quickinfo="Name for value-added tax"/></EntityType>
+			<EntityType Name="ZB_FIN_WBSElementVHType" sap:label="VH: WBS Element" sap:value-list="true" sap:content-version="1">
+				<Key><PropertyRef Name="StandardTextKey"/></Key><Property Name="StandardTextKey" Type="Edm.String" Nullable="false" MaxLength="8" sap:display-format="NonNegative" sap:text="Description"/><Property Name="Description" Type="Edm.String" MaxLength="40" sap:label="Description" sap:quickinfo="PS: Short description (1st text line)"/></EntityType>
+			<EntityType Name="DocumentType" sap:label="Supporting Document BO Projection View" sap:content-version="1">
+				<Key><PropertyRef Name="BatchID"/></Key><Property Name="BatchID" Type="Edm.Guid" Nullable="false" sap:label="UUID" sap:quickinfo="Global Unique ID for table"/><Property Name="FilePath" Type="Edm.String" MaxLength="255" sap:label="URL" sap:quickinfo="URL row"/><Property Name="PrimaryIndicator" Type="Edm.String" MaxLength="1" sap:display-format="UpperCase" sap:label=""
+					sap:quickinfo="Single-Character Flag"/><Property Name="ArchiveDocID" Type="Edm.String" MaxLength="40" sap:label="Document ID" sap:quickinfo="SAP ArchiveLink: Document ID"/><NavigationProperty Name="to_GeneralInfo" Relationship="cds_zsd_fin_vimmanualpayment.assoc_8236047EAB057C987AF88705B30E1514"
+					FromRole="FromRole_assoc_8236047EAB057C987AF88705B30E1514" ToRole="ToRole_assoc_8236047EAB057C987AF88705B30E1514"/></EntityType>
+			<EntityType Name="GeneralInfoType" sap:label="General Info BO Projection View" sap:content-version="1">
+				<Key><PropertyRef Name="BatchID"/></Key><Property Name="BatchID" Type="Edm.Guid" Nullable="false" sap:label="UUID" sap:quickinfo="Global Unique ID for table"/><Property Name="CompanyCode" Type="Edm.String" MaxLength="4" sap:display-format="UpperCase" sap:label="Company Code"/><Property Name="SupplierNumber" Type="Edm.String" MaxLength="10" sap:display-format="UpperCase" sap:label="Vendor"
+					sap:quickinfo="Account Number of Vendor or Creditor" sap:value-list="standard"/><Property Name="SupplierName" Type="Edm.String" MaxLength="10" sap:creatable="false" sap:updatable="false"/><Property Name="AbnNumber" Type="Edm.String" MaxLength="20" sap:display-format="UpperCase" sap:label="VAT Registration No."
+					sap:quickinfo="VAT Registration Number"/><Property Name="ReferenceNumber" Type="Edm.String" MaxLength="16" sap:display-format="UpperCase" sap:label="Reference"
+					sap:quickinfo="Reference Document Number"/><Property Name="DocumentDate" Type="Edm.DateTime" Precision="0" sap:display-format="Date" sap:label="Document Date"
+					sap:quickinfo="Document Date in Document"/><Property Name="GrossAmount" Type="Edm.Decimal" Precision="14" Scale="3" sap:unit="CurrencyUnit" sap:label="Gross Invoice Amount"
+					sap:quickinfo="Gross Invoice Amount in Document Currency"/><Property Name="CurrencyUnit" Type="Edm.String" MaxLength="5" sap:label="Currency" sap:quickinfo="Currency Key" sap:value-list="standard"
+					sap:semantics="currency-code"/><Property Name="TaxAmount" Type="Edm.Decimal" Precision="14" Scale="3" sap:unit="CurrencyUnit" sap:label="Signed Amount"/><Property Name="Description" Type="Edm.String" MaxLength="50" sap:label="Text" sap:quickinfo="Item Text"/><Property Name="RequesterID" Type="Edm.String" MaxLength="80" sap:label="E-Mail Address" sap:value-list="standard"/><Property Name="CmRefDat" Type="Edm.DateTime" Precision="0" sap:display-format="Date" sap:label="Date" sap:quickinfo="Field of type DATS"/><Property Name="CmRefNo" Type="Edm.String" MaxLength="16" sap:display-format="UpperCase" sap:label="Reference NO"
+					sap:quickinfo="Reference document number"/><Property Name="Title" Type="Edm.String" MaxLength="15" sap:label="Title"/><Property Name="Name" Type="Edm.String" MaxLength="35" sap:label="Name" sap:quickinfo="Name 1"/><Property Name="Street" Type="Edm.String" MaxLength="30" sap:label="Street and House No." sap:quickinfo="Street and House Number"/><Property Name="PostCode" Type="Edm.String" MaxLength="10" sap:display-format="UpperCase" sap:label="P.O. Box Postal Code"/><Property Name="City" Type="Edm.String" MaxLength="35" sap:label="City"/><Property Name="Country" Type="Edm.String" MaxLength="3" sap:display-format="UpperCase" sap:label="Country" sap:quickinfo="Country Key"/><Property Name="Email" Type="Edm.String" MaxLength="130" sap:label="Clrk's internet add."
+					sap:quickinfo="Internet address of partner company clerk"/><Property Name="BankCountry" Type="Edm.String" MaxLength="3" sap:display-format="UpperCase" sap:label="Bank Country"
+					sap:quickinfo="Bank country key" sap:value-list="standard"/><Property Name="BankName" Type="Edm.String" MaxLength="60" sap:label="Bank name" sap:quickinfo="Name of bank"/><Property Name="BankKey" Type="Edm.String" MaxLength="15" sap:display-format="UpperCase" sap:label="Bank number"/><Property Name="BankAccount" Type="Edm.String" MaxLength="18" sap:display-format="UpperCase" sap:label="Bank Account"
+					sap:quickinfo="Bank account number"/><Property Name="Iban" Type="Edm.String" MaxLength="34" sap:display-format="UpperCase" sap:label="IBAN"
+					sap:quickinfo="IBAN (International Bank Account Number)"/><Property Name="InstructionKey" Type="Edm.String" MaxLength="2" sap:display-format="UpperCase" sap:label="Instruction key"
+					sap:quickinfo="Instruction key for data medium exchange" sap:value-list="standard"/><NavigationProperty Name="to_Document" Relationship="cds_zsd_fin_vimmanualpayment.assoc_A019113462EE00F6D9833DC17BA9A2BC"
+					FromRole="FromRole_assoc_A019113462EE00F6D9833DC17BA9A2BC" ToRole="ToRole_assoc_A019113462EE00F6D9833DC17BA9A2BC"/><NavigationProperty Name="to_LineItem" Relationship="cds_zsd_fin_vimmanualpayment.assoc_86C99D69DC1EA64DDE88A72EB6C9D0BC"
+					FromRole="FromRole_assoc_86C99D69DC1EA64DDE88A72EB6C9D0BC" ToRole="ToRole_assoc_86C99D69DC1EA64DDE88A72EB6C9D0BC"/></EntityType>
+			<EntityType Name="LineItemType" sap:label="Line Item BO Projection View" sap:content-version="1">
+				<Key><PropertyRef Name="ItemNumber"/><PropertyRef Name="CompanyCode"/><PropertyRef Name="BatchID"/></Key><Property Name="ItemNumber" Type="Edm.String" Nullable="false" MaxLength="5" sap:display-format="NonNegative" sap:label="Document Item Id"/><Property Name="CompanyCode" Type="Edm.String" Nullable="false" MaxLength="4" sap:display-format="UpperCase" sap:label="Company Code"/><Property Name="BatchID" Type="Edm.Guid" Nullable="false" sap:label="UUID" sap:quickinfo="Global Unique ID for table"/><Property Name="Description" Type="Edm.String" MaxLength="40" sap:label="Material description"/><Property Name="CurrencyCode" Type="Edm.String" MaxLength="5" sap:semantics="currency-code"/><Property Name="Amount" Type="Edm.Decimal" Precision="23" Scale="0" sap:unit="CurrencyCode"/><Property Name="CreditDebit" Type="Edm.String" MaxLength="1" sap:display-format="UpperCase" sap:label="Debit/Credit ind"
+					sap:quickinfo="Debit/Credit Indicator"/><Property Name="TaxCode" Type="Edm.String" MaxLength="2" sap:display-format="UpperCase" sap:label="Tax Code" sap:value-list="standard"/><Property Name="GlAccount" Type="Edm.String" MaxLength="10" sap:value-list="standard"/><Property Name="CostCenter" Type="Edm.String" MaxLength="10" sap:value-list="standard"/><Property Name="ProfitCenter" Type="Edm.String" MaxLength="10" sap:value-list="standard"/><Property Name="WbsElement" Type="Edm.String" MaxLength="8" sap:display-format="NonNegative" sap:value-list="standard"/><NavigationProperty Name="to_GeneralInfo" Relationship="cds_zsd_fin_vimmanualpayment.assoc_917549EAE8165EB7F3EADB452FCB00B6"
+					FromRole="FromRole_assoc_917549EAE8165EB7F3EADB452FCB00B6" ToRole="ToRole_assoc_917549EAE8165EB7F3EADB452FCB00B6"/></EntityType>
+			<Association Name="assoc_917549EAE8165EB7F3EADB452FCB00B6" sap:content-version="1"><End Type="cds_zsd_fin_vimmanualpayment.LineItemType" Multiplicity="1" Role="FromRole_assoc_917549EAE8165EB7F3EADB452FCB00B6"/><End Type="cds_zsd_fin_vimmanualpayment.GeneralInfoType" Multiplicity="1" Role="ToRole_assoc_917549EAE8165EB7F3EADB452FCB00B6"/></Association>
+			<Association Name="assoc_A019113462EE00F6D9833DC17BA9A2BC" sap:content-version="1">
+				<End Type="cds_zsd_fin_vimmanualpayment.GeneralInfoType" Multiplicity="1" Role="FromRole_assoc_A019113462EE00F6D9833DC17BA9A2BC"><OnDelete Action="Cascade"/></End><End Type="cds_zsd_fin_vimmanualpayment.DocumentType" Multiplicity="0..1" Role="ToRole_assoc_A019113462EE00F6D9833DC17BA9A2BC"/>
+				<ReferentialConstraint>
+					<Principal Role="FromRole_assoc_A019113462EE00F6D9833DC17BA9A2BC"><PropertyRef Name="BatchID"/></Principal>
+					<Dependent Role="ToRole_assoc_A019113462EE00F6D9833DC17BA9A2BC"><PropertyRef Name="BatchID"/></Dependent>
+				</ReferentialConstraint>
+			</Association>
+			<Association Name="assoc_86C99D69DC1EA64DDE88A72EB6C9D0BC" sap:content-version="1">
+				<End Type="cds_zsd_fin_vimmanualpayment.GeneralInfoType" Multiplicity="1" Role="FromRole_assoc_86C99D69DC1EA64DDE88A72EB6C9D0BC"><OnDelete Action="Cascade"/></End><End Type="cds_zsd_fin_vimmanualpayment.LineItemType" Multiplicity="*" Role="ToRole_assoc_86C99D69DC1EA64DDE88A72EB6C9D0BC"/>
+				<ReferentialConstraint>
+					<Principal Role="FromRole_assoc_86C99D69DC1EA64DDE88A72EB6C9D0BC"><PropertyRef Name="BatchID"/></Principal>
+					<Dependent Role="ToRole_assoc_86C99D69DC1EA64DDE88A72EB6C9D0BC"><PropertyRef Name="BatchID"/></Dependent>
+				</ReferentialConstraint>
+			</Association>
+			<Association Name="assoc_8236047EAB057C987AF88705B30E1514" sap:content-version="1"><End Type="cds_zsd_fin_vimmanualpayment.DocumentType" Multiplicity="1" Role="FromRole_assoc_8236047EAB057C987AF88705B30E1514"/><End Type="cds_zsd_fin_vimmanualpayment.GeneralInfoType" Multiplicity="1" Role="ToRole_assoc_8236047EAB057C987AF88705B30E1514"/></Association>
+			<EntityContainer Name="cds_zsd_fin_vimmanualpayment_Entities" m:IsDefaultEntityContainer="true" sap:message-scope-supported="true"
+				sap:supported-formats="atom json xlsx"><EntitySet Name="I_Currency" EntityType="cds_zsd_fin_vimmanualpayment.I_CurrencyType" sap:creatable="false" sap:updatable="false"
+				sap:deletable="false" sap:searchable="true" sap:content-version="1"/><EntitySet Name="ZB_FIN_BankCountryVH" EntityType="cds_zsd_fin_vimmanualpayment.ZB_FIN_BankCountryVHType" sap:creatable="false"
+				sap:updatable="false" sap:deletable="false" sap:searchable="true" sap:content-version="1"/><EntitySet Name="ZB_FIN_CostCenterVH" EntityType="cds_zsd_fin_vimmanualpayment.ZB_FIN_CostCenterVHType" sap:creatable="false"
+				sap:updatable="false" sap:deletable="false" sap:searchable="true" sap:content-version="1"/><EntitySet Name="ZB_FIN_GlAccountVH" EntityType="cds_zsd_fin_vimmanualpayment.ZB_FIN_GlAccountVHType" sap:creatable="false"
+				sap:updatable="false" sap:deletable="false" sap:searchable="true" sap:content-version="1"/><EntitySet Name="ZB_FIN_InstructionKeyVH" EntityType="cds_zsd_fin_vimmanualpayment.ZB_FIN_InstructionKeyVHType" sap:creatable="false"
+				sap:updatable="false" sap:deletable="false" sap:searchable="true" sap:content-version="1"/><EntitySet Name="ZB_FIN_ProfitCenterVH" EntityType="cds_zsd_fin_vimmanualpayment.ZB_FIN_ProfitCenterVHType" sap:creatable="false"
+				sap:updatable="false" sap:deletable="false" sap:searchable="true" sap:content-version="1"/><EntitySet Name="ZB_FIN_RequesterIDVH" EntityType="cds_zsd_fin_vimmanualpayment.ZB_FIN_RequesterIDVHType" sap:creatable="false"
+				sap:updatable="false" sap:deletable="false" sap:searchable="true" sap:content-version="1"/><EntitySet Name="ZB_FIN_SupplierNumberVH" EntityType="cds_zsd_fin_vimmanualpayment.ZB_FIN_SupplierNumberVHType" sap:creatable="false"
+				sap:updatable="false" sap:deletable="false" sap:searchable="true" sap:content-version="1"/><EntitySet Name="ZB_FIN_TaxCodeCVH" EntityType="cds_zsd_fin_vimmanualpayment.ZB_FIN_TaxCodeCVHType" sap:creatable="false"
+				sap:updatable="false" sap:deletable="false" sap:searchable="true" sap:content-version="1"/><EntitySet Name="ZB_FIN_WBSElementVH" EntityType="cds_zsd_fin_vimmanualpayment.ZB_FIN_WBSElementVHType" sap:creatable="false"
+				sap:updatable="false" sap:deletable="false" sap:searchable="true" sap:content-version="1"/><EntitySet Name="Document" EntityType="cds_zsd_fin_vimmanualpayment.DocumentType" sap:content-version="1"/><EntitySet Name="GeneralInfo" EntityType="cds_zsd_fin_vimmanualpayment.GeneralInfoType" sap:searchable="true" sap:content-version="1"/><EntitySet Name="LineItem" EntityType="cds_zsd_fin_vimmanualpayment.LineItemType" sap:searchable="true" sap:content-version="1"/>
+				<AssociationSet Name="assoc_86C99D69DC1EA64DDE88A72EB6C9D0BC"
+					Association="cds_zsd_fin_vimmanualpayment.assoc_86C99D69DC1EA64DDE88A72EB6C9D0BC" sap:creatable="false" sap:updatable="false"
+					sap:deletable="false" sap:content-version="1"><End EntitySet="GeneralInfo" Role="FromRole_assoc_86C99D69DC1EA64DDE88A72EB6C9D0BC"/><End EntitySet="LineItem" Role="ToRole_assoc_86C99D69DC1EA64DDE88A72EB6C9D0BC"/></AssociationSet>
+				<AssociationSet Name="assoc_8236047EAB057C987AF88705B30E1514"
+					Association="cds_zsd_fin_vimmanualpayment.assoc_8236047EAB057C987AF88705B30E1514" sap:creatable="false" sap:updatable="false"
+					sap:deletable="false" sap:content-version="1"><End EntitySet="Document" Role="FromRole_assoc_8236047EAB057C987AF88705B30E1514"/><End EntitySet="GeneralInfo" Role="ToRole_assoc_8236047EAB057C987AF88705B30E1514"/></AssociationSet>
+				<AssociationSet Name="assoc_A019113462EE00F6D9833DC17BA9A2BC"
+					Association="cds_zsd_fin_vimmanualpayment.assoc_A019113462EE00F6D9833DC17BA9A2BC" sap:creatable="false" sap:updatable="false"
+					sap:deletable="false" sap:content-version="1"><End EntitySet="GeneralInfo" Role="FromRole_assoc_A019113462EE00F6D9833DC17BA9A2BC"/><End EntitySet="Document" Role="ToRole_assoc_A019113462EE00F6D9833DC17BA9A2BC"/></AssociationSet>
+				<AssociationSet Name="assoc_917549EAE8165EB7F3EADB452FCB00B6"
+					Association="cds_zsd_fin_vimmanualpayment.assoc_917549EAE8165EB7F3EADB452FCB00B6" sap:creatable="false" sap:updatable="false"
+					sap:deletable="false" sap:content-version="1"><End EntitySet="LineItem" Role="FromRole_assoc_917549EAE8165EB7F3EADB452FCB00B6"/><End EntitySet="GeneralInfo" Role="ToRole_assoc_917549EAE8165EB7F3EADB452FCB00B6"/></AssociationSet>
+			</EntityContainer>
+			<Annotations Target="cds_zsd_fin_vimmanualpayment.GeneralInfoType/SupplierNumber" xmlns="http://docs.oasis-open.org/odata/ns/edm">
+				<Annotation Term="Common.ValueList">
+					<Record><PropertyValue Property="Label" String="VH: Supplier Number"/><PropertyValue Property="CollectionPath" String="ZB_FIN_SupplierNumberVH"/><PropertyValue Property="SearchSupported" Bool="true"/>
+						<PropertyValue Property="Parameters">
+							<Collection>
+								<Record Type="Common.ValueListParameterInOut"><PropertyValue Property="LocalDataProperty" PropertyPath="SupplierNumber"/><PropertyValue Property="ValueListProperty" String="StandardTextKey"/></Record>
+								<Record Type="Common.ValueListParameterOut"><PropertyValue Property="LocalDataProperty" PropertyPath="AbnNumber"/><PropertyValue Property="ValueListProperty" String="AbnNumber"/></Record>
+								<Record Type="Common.ValueListParameterOut"><PropertyValue Property="LocalDataProperty" PropertyPath="SupplierName"/><PropertyValue Property="ValueListProperty" String="Description"/></Record>
+							</Collection>
+						</PropertyValue>
+					</Record>
+				</Annotation>
+			</Annotations>
+			<Annotations Target="cds_zsd_fin_vimmanualpayment.GeneralInfoType/CurrencyUnit" xmlns="http://docs.oasis-open.org/odata/ns/edm">
+				<Annotation Term="Common.ValueList">
+					<Record><PropertyValue Property="Label" String="Currency"/><PropertyValue Property="CollectionPath" String="I_Currency"/><PropertyValue Property="SearchSupported" Bool="true"/>
+						<PropertyValue Property="Parameters">
+							<Collection>
+								<Record Type="Common.ValueListParameterInOut"><PropertyValue Property="LocalDataProperty" PropertyPath="CurrencyUnit"/><PropertyValue Property="ValueListProperty" String="Currency"/></Record>
+								<Record Type="Common.ValueListParameterDisplayOnly"><PropertyValue Property="ValueListProperty" String="Currency_Text"/></Record>
+								<Record Type="Common.ValueListParameterDisplayOnly"><PropertyValue Property="ValueListProperty" String="Decimals"/></Record>
+								<Record Type="Common.ValueListParameterDisplayOnly"><PropertyValue Property="ValueListProperty" String="CurrencyISOCode"/></Record>
+								<Record Type="Common.ValueListParameterDisplayOnly"><PropertyValue Property="ValueListProperty" String="AlternativeCurrencyKey"/></Record>
+								<Record Type="Common.ValueListParameterDisplayOnly"><PropertyValue Property="ValueListProperty" String="IsPrimaryCurrencyForISOCrcy"/></Record>
+							</Collection>
+						</PropertyValue>
+					</Record>
+				</Annotation>
+			</Annotations>
+			<Annotations Target="cds_zsd_fin_vimmanualpayment.GeneralInfoType/RequesterID" xmlns="http://docs.oasis-open.org/odata/ns/edm">
+				<Annotation Term="Common.ValueList">
+					<Record><PropertyValue Property="Label" String="VH: Requestor ID"/><PropertyValue Property="CollectionPath" String="ZB_FIN_RequesterIDVH"/><PropertyValue Property="SearchSupported" Bool="true"/>
+						<PropertyValue Property="Parameters">
+							<Collection>
+								<Record Type="Common.ValueListParameterInOut"><PropertyValue Property="LocalDataProperty" PropertyPath="RequesterID"/><PropertyValue Property="ValueListProperty" String="StandardTextKey"/></Record>
+								<Record Type="Common.ValueListParameterDisplayOnly"><PropertyValue Property="ValueListProperty" String="Description"/></Record>
+							</Collection>
+						</PropertyValue>
+					</Record>
+				</Annotation><Annotation Term="Common.FieldControl" EnumMember="Common.FieldControlType/Mandatory"/></Annotations>
+			<Annotations Target="cds_zsd_fin_vimmanualpayment.GeneralInfoType/BankCountry" xmlns="http://docs.oasis-open.org/odata/ns/edm">
+				<Annotation Term="Common.ValueList">
+					<Record><PropertyValue Property="Label" String="VH: Bank Country"/><PropertyValue Property="CollectionPath" String="ZB_FIN_BankCountryVH"/><PropertyValue Property="SearchSupported" Bool="true"/>
+						<PropertyValue Property="Parameters">
+							<Collection>
+								<Record Type="Common.ValueListParameterInOut"><PropertyValue Property="LocalDataProperty" PropertyPath="BankCountry"/><PropertyValue Property="ValueListProperty" String="StandardTextKey"/></Record>
+								<Record Type="Common.ValueListParameterDisplayOnly"><PropertyValue Property="ValueListProperty" String="BankKey"/></Record>
+								<Record Type="Common.ValueListParameterDisplayOnly"><PropertyValue Property="ValueListProperty" String="Description"/></Record>
+							</Collection>
+						</PropertyValue>
+					</Record>
+				</Annotation>
+			</Annotations>
+			<Annotations Target="cds_zsd_fin_vimmanualpayment.GeneralInfoType/InstructionKey" xmlns="http://docs.oasis-open.org/odata/ns/edm">
+				<Annotation Term="Common.ValueList">
+					<Record><PropertyValue Property="Label" String="VH: Instruction Key"/><PropertyValue Property="CollectionPath" String="ZB_FIN_InstructionKeyVH"/><PropertyValue Property="SearchSupported" Bool="true"/>
+						<PropertyValue Property="Parameters">
+							<Collection>
+								<Record Type="Common.ValueListParameterInOut"><PropertyValue Property="LocalDataProperty" PropertyPath="InstructionKey"/><PropertyValue Property="ValueListProperty" String="StandardTextKey"/></Record>
+								<Record Type="Common.ValueListParameterDisplayOnly"><PropertyValue Property="ValueListProperty" String="Description"/></Record>
+							</Collection>
+						</PropertyValue>
+					</Record>
+				</Annotation>
+			</Annotations>
+			<Annotations Target="cds_zsd_fin_vimmanualpayment.LineItemType/TaxCode" xmlns="http://docs.oasis-open.org/odata/ns/edm">
+				<Annotation Term="Common.ValueList">
+					<Record><PropertyValue Property="Label" String="VH: Tax Code"/><PropertyValue Property="CollectionPath" String="ZB_FIN_TaxCodeCVH"/><PropertyValue Property="SearchSupported" Bool="true"/>
+						<PropertyValue Property="Parameters">
+							<Collection>
+								<Record Type="Common.ValueListParameterInOut"><PropertyValue Property="LocalDataProperty" PropertyPath="TaxCode"/><PropertyValue Property="ValueListProperty" String="StandardTextKey"/></Record>
+								<Record Type="Common.ValueListParameterDisplayOnly"><PropertyValue Property="ValueListProperty" String="Description"/></Record>
+							</Collection>
+						</PropertyValue>
+					</Record>
+				</Annotation>
+			</Annotations>
+			<Annotations Target="cds_zsd_fin_vimmanualpayment.LineItemType/GlAccount" xmlns="http://docs.oasis-open.org/odata/ns/edm">
+				<Annotation Term="Common.ValueList">
+					<Record><PropertyValue Property="Label" String="VH: GL Account"/><PropertyValue Property="CollectionPath" String="ZB_FIN_GlAccountVH"/><PropertyValue Property="SearchSupported" Bool="true"/>
+						<PropertyValue Property="Parameters">
+							<Collection>
+								<Record Type="Common.ValueListParameterInOut"><PropertyValue Property="LocalDataProperty" PropertyPath="GlAccount"/><PropertyValue Property="ValueListProperty" String="StandardTextKey"/></Record>
+								<Record Type="Common.ValueListParameterDisplayOnly"><PropertyValue Property="ValueListProperty" String="Description"/></Record>
+							</Collection>
+						</PropertyValue>
+					</Record>
+				</Annotation>
+			</Annotations>
+			<Annotations Target="cds_zsd_fin_vimmanualpayment.LineItemType/CostCenter" xmlns="http://docs.oasis-open.org/odata/ns/edm">
+				<Annotation Term="Common.ValueList">
+					<Record><PropertyValue Property="Label" String="VH: Cost Center"/><PropertyValue Property="CollectionPath" String="ZB_FIN_CostCenterVH"/><PropertyValue Property="SearchSupported" Bool="true"/>
+						<PropertyValue Property="Parameters">
+							<Collection>
+								<Record Type="Common.ValueListParameterInOut"><PropertyValue Property="LocalDataProperty" PropertyPath="CostCenter"/><PropertyValue Property="ValueListProperty" String="StandardTextKey"/></Record>
+								<Record Type="Common.ValueListParameterDisplayOnly"><PropertyValue Property="ValueListProperty" String="Description"/></Record>
+							</Collection>
+						</PropertyValue>
+					</Record>
+				</Annotation>
+			</Annotations>
+			<Annotations Target="cds_zsd_fin_vimmanualpayment.LineItemType/ProfitCenter" xmlns="http://docs.oasis-open.org/odata/ns/edm">
+				<Annotation Term="Common.ValueList">
+					<Record><PropertyValue Property="Label" String="VH: Profit Center"/><PropertyValue Property="CollectionPath" String="ZB_FIN_ProfitCenterVH"/><PropertyValue Property="SearchSupported" Bool="true"/>
+						<PropertyValue Property="Parameters">
+							<Collection>
+								<Record Type="Common.ValueListParameterInOut"><PropertyValue Property="LocalDataProperty" PropertyPath="ProfitCenter"/><PropertyValue Property="ValueListProperty" String="StandardTextKey"/></Record>
+								<Record Type="Common.ValueListParameterDisplayOnly"><PropertyValue Property="ValueListProperty" String="Description"/></Record>
+							</Collection>
+						</PropertyValue>
+					</Record>
+				</Annotation>
+			</Annotations>
+			<Annotations Target="cds_zsd_fin_vimmanualpayment.LineItemType/WbsElement" xmlns="http://docs.oasis-open.org/odata/ns/edm">
+				<Annotation Term="Common.ValueList">
+					<Record><PropertyValue Property="Label" String="VH: WBS Element"/><PropertyValue Property="CollectionPath" String="ZB_FIN_WBSElementVH"/><PropertyValue Property="SearchSupported" Bool="true"/>
+						<PropertyValue Property="Parameters">
+							<Collection>
+								<Record Type="Common.ValueListParameterInOut"><PropertyValue Property="LocalDataProperty" PropertyPath="WbsElement"/><PropertyValue Property="ValueListProperty" String="StandardTextKey"/></Record>
+								<Record Type="Common.ValueListParameterDisplayOnly"><PropertyValue Property="ValueListProperty" String="Description"/></Record>
+							</Collection>
+						</PropertyValue>
+					</Record>
+				</Annotation>
+			</Annotations>
+			<Annotations Target="cds_zsd_fin_vimmanualpayment.cds_zsd_fin_vimmanualpayment_Entities" xmlns="http://docs.oasis-open.org/odata/ns/edm">
+				<Annotation Term="Aggregation.ApplySupported">
+					<Record>
+						<PropertyValue Property="Transformations">
+							<Collection>
+								<String>aggregate</String>
+								<String>groupby</String>
+								<String>filter</String>
+							</Collection>
+						</PropertyValue><PropertyValue Property="Rollup" EnumMember="None"/></Record>
+				</Annotation>
+			</Annotations>
+			<Annotations Target="cds_zsd_fin_vimmanualpayment.GeneralInfoType/AbnNumber" xmlns="http://docs.oasis-open.org/odata/ns/edm"><Annotation Term="Common.FieldControl" EnumMember="Common.FieldControlType/Mandatory"/></Annotations>
+			<Annotations Target="cds_zsd_fin_vimmanualpayment.GeneralInfoType/CompanyCode" xmlns="http://docs.oasis-open.org/odata/ns/edm"><Annotation Term="Common.FieldControl" EnumMember="Common.FieldControlType/Mandatory"/></Annotations>
+			<Annotations Target="cds_zsd_fin_vimmanualpayment.GeneralInfoType/DocumentDate" xmlns="http://docs.oasis-open.org/odata/ns/edm"><Annotation Term="Common.FieldControl" EnumMember="Common.FieldControlType/Mandatory"/></Annotations>
+			<Annotations Target="cds_zsd_fin_vimmanualpayment.GeneralInfoType/GrossAmount" xmlns="http://docs.oasis-open.org/odata/ns/edm"><Annotation Term="Common.FieldControl" EnumMember="Common.FieldControlType/Mandatory"/></Annotations>
+			<Annotations Target="cds_zsd_fin_vimmanualpayment.GeneralInfoType/ReferenceNumber" xmlns="http://docs.oasis-open.org/odata/ns/edm"><Annotation Term="Common.FieldControl" EnumMember="Common.FieldControlType/Mandatory"/></Annotations>
+			<Annotations Target="cds_zsd_fin_vimmanualpayment.I_CurrencyType/Currency" xmlns="http://docs.oasis-open.org/odata/ns/edm"><Annotation Term="Common.UnitSpecificScale" Path="Decimals"/></Annotations><atom:link rel="self"
+				href="https://webidecp-s0020231377trial.dispatcher.hanatrial.ondemand.com/destinations/S4H/sap/opu/odata/sap/ZUI_FIN_VIMMANUALPAYMENT/$metadata"
+				xmlns:atom="http://www.w3.org/2005/Atom"/><atom:link rel="latest-version"
+				href="https://webidecp-s0020231377trial.dispatcher.hanatrial.ondemand.com/destinations/S4H/sap/opu/odata/sap/ZUI_FIN_VIMMANUALPAYMENT/$metadata"
+				xmlns:atom="http://www.w3.org/2005/Atom"/></Schema>
+	</edmx:DataServices>
+</edmx:Edmx>

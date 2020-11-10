@@ -1,0 +1,53 @@
+{
+	BatchID: "01",
+	CompanyCode: "",
+	SupplierNumber: "",
+	SupplierName: "",
+	AbnNumber: ""
+	ReferenceNumber: "",
+	DocumentDate: "",
+	GrossAmount: "",
+	CurrencyUnit: "",
+	TaxAmountIndicator: "",
+	TaxAmount: "",
+	Description: "",
+	RequesterID: "",
+	CmIndicator: "",
+	CmRefDat: "",
+	Title: "",
+	Name: "",
+	Street: "",
+	PostCode: "",
+	City: "",
+	Country: "",
+	Email: "",
+	BankCountry: "",
+	BankName: "",
+	BankKey: "",
+	BankAccount: "",
+	Iban: ""
+	to_LineItem: [{
+		BatchID: "",
+		ParentUUID: "01",
+		ItemNumber: "",
+		Description: "",
+		CurrencyCode: "",
+		Amount: "",
+		CreditDebit: "",
+		TaxCode: "",
+		CompanyCode: "",
+		GlAccount: "",
+		CostCenter: "",
+		ProfitCenter: "",
+		WbsElement: ""
+	}],
+	to_Document: [{
+		BatchID: "",
+		ParentUUID: "01",
+		FilePath: "",
+		PrimaryIndicator: "",
+		ArchiveDocID: ""
+	}]
+}
+
+/sap/opu/odata/sap/ZUI_FIN_VIMMANUALPAYMENT/(BatchID='01')/to_LineItem
