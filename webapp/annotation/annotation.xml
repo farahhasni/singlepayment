@@ -16,30 +16,39 @@
 						<Record Type="UI.DataField">
 							<PropertyValue Property="Value" Path="ItemNumber"/>
 							<Annotation Term="Common.FieldControl" EnumMember="Common.FieldControlType/ReadOnly"/>
+							<PropertyValue Property="Label" String="{@i18n&gt;itemNumberLabel}"/>
 						</Record>
 						<Record Type="UI.DataField">
 							<PropertyValue Property="Value" Path="Description"/>
+							<PropertyValue Property="Label" String="{@i18n&gt;descriptionLabel}"/>
 						</Record>
 						<Record Type="UI.DataField">
 							<PropertyValue Property="Value" Path="Amount"/>
+							<PropertyValue Property="Label" String="{@i18n&gt;amountLabel}"/>
 						</Record>
 						<Record Type="UI.DataField">
 							<PropertyValue Property="Value" Path="CreditDebit"/>
+							<PropertyValue Property="Label" String="{@i18n&gt;creditDebitLabel}"/>
 						</Record>
 						<Record Type="UI.DataField">
 							<PropertyValue Property="Value" Path="TaxCode"/>
+							<PropertyValue Property="Label" String="{@i18n&gt;taxCodeLabel}"/>
 						</Record>
 						<Record Type="UI.DataField">
 							<PropertyValue Property="Value" Path="GlAccount"/>
+							<PropertyValue Property="Label" String="{@i18n&gt;glAccountLabel}"/>
 						</Record>
 						<Record Type="UI.DataField">
 							<PropertyValue Property="Value" Path="CostCenter"/>
+							<PropertyValue Property="Label" String="{@i18n&gt;costCenterLabel}"/>
 						</Record>
 						<Record Type="UI.DataField">
 							<PropertyValue Property="Value" Path="ProfitCenter"/>
+							<PropertyValue Property="Label" String="{@i18n&gt;profitCenterLabel}"/>
 						</Record>
 						<Record Type="UI.DataField">
 							<PropertyValue Property="Value" Path="WbsElement"/>
+							<PropertyValue Property="Label" String="{@i18n&gt;wbsElementLabel}"/>
 						</Record>
 					</Collection>
 				</Annotation>

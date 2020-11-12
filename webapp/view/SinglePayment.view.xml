@@ -7,7 +7,7 @@
 			<f:DynamicPage id="idDynamicPage" class="sapUiNoContentPadding" showFooter="true" fitContent="true">
 				<f:content>
 					<Wizard id="idWizard" class="sapUiResponsivePadding--header sapUiResponsivePadding--content">
-						<WizardStep id="idGeneralInformation" title="{i18n>generalInformationTitle}" validated="true" complete="onComplete">
+						<WizardStep id="idGeneralInformation" title="{i18n>generalInformationTitle}" validated="true" >
 							<smartForm:SmartForm id="idGeneralInfo" editable="true">
 								<smartForm:layout>
 									<smartForm:Layout labelSpanL="4" labelSpanM="4" emptySpanL="5"/>
@@ -20,7 +20,7 @@
 										<smartField:SmartField value="{SupplierNumber}" change="onChangeGeneralInfo"/>
 									</smartForm:GroupElement>
 									<smartForm:GroupElement>
-										<Button text="{i18n>OneTimeVendor}" press="onPressOneTimeVendorDialog" enabled="{= ${wizardView>/isOneTimeVendorSelected}}"></Button>
+										<Button text="{i18n>oneTimeVendorLabel}" press="onPressOneTimeVendorDialog" enabled="{= ${wizardView>/isOneTimeVendorSelected}}"></Button>
 									</smartForm:GroupElement>
 									<smartForm:GroupElement>
 										<smartField:SmartField textLabel="{i18n>supplierNameLabel}" value="{SupplierName}" visible="{= ${wizardView>/isSupplierNameSelected}}"
@@ -43,8 +43,6 @@
 									</smartForm:GroupElement>
 									<smartForm:GroupElement>
 										<smartField:SmartField value="{TaxAmountIndicator}" change="onSelectAutoCalcTax"/>
-										<!--<Label text="{i18n>AutoCalcTax}"/>-->
-										<!--<CheckBox select="onSelectAutoCalcTax"/>-->
 									</smartForm:GroupElement>
 									<smartForm:GroupElement>
 										<smartField:SmartField value="{TaxAmount}" visible="{wizardView>/isEnabledAutoCalcTax}"/>
@@ -66,102 +64,13 @@
 									</smartForm:GroupElement>
 								</smartForm:Group>
 							</smartForm:SmartForm>
-							<!--<form:SimpleForm id="idGeneralInformationForm" editable="true" layout="ResponsiveGridLayout" labelSpanXL="4" labelSpanL="4" labelSpanM="12"-->
-							<!--	labelSpanS="12" adjustLabelSpan="false" emptySpanXL="0" emptySpanL="0" emptySpanM="0" emptySpanS="0" columnsXL="2" columnsL="2" columnsM="2"-->
-							<!--	singleContainerFullSize="false">-->
-							<!--	<form:content>-->
-							<!--TODO: Change all to smartfields-->
-							<!--		<Label text="{i18n>CompanyCode}"/>-->
-							<!--		<Input id="name" value="{CompanyCode}" required="true">-->
-							<!--			<layoutData>-->
-							<!--				<l:GridData span="XL4 L5 M6 S6"/>-->
-							<!--			</layoutData>-->
-							<!--		</Input>-->
-							<!--		<Label text="{i18n>SupplierNumber}"/>-->
-							<!--		<Input value="{SupplierNumber}">-->
-							<!--			<layoutData>-->
-							<!--				<l:GridData span="XL2 L3 M4 S4"/>-->
-							<!--			</layoutData>-->
-							<!--		</Input>-->
-							<!--		<Button text="{i18n>OneTimeVendor}" press="onPressOneTimeVendorDialog">-->
-							<!--			<layoutData>-->
-							<!--				<l:GridData span="XL2 L4 M5 S5"/>-->
-							<!--			</layoutData>-->
-							<!--		</Button>-->
-							<!--		<Label text="{i18n>SupplierName}"/>-->
-							<!--		<Text text="{SupplierName}"/>-->
-							<!--		<Label text="{i18n>ABNNumber}"/>-->
-							<!--		<Input value="{ABNNumber}" required="true">-->
-							<!--			<layoutData>-->
-							<!--				<l:GridData span="XL4 L5 M6 S6"/>-->
-							<!--			</layoutData>-->
-							<!--		</Input>-->
-							<!--		<Label text="{i18n>ReferenceNumber}"/>-->
-							<!--		<Input value="{ReferenceNumber}" required="true">-->
-							<!--			<layoutData>-->
-							<!--				<l:GridData span="XL4 L5 M6 S6"/>-->
-							<!--			</layoutData>-->
-							<!--		</Input>-->
-							<!--		<Label text="{i18n>DocumentDate}"/>-->
-							<!--		<DatePicker id="DP1" placeholder="{i18n>EnterDate}" class="sapUiSmallMarginBottom" required="true">-->
-							<!--			<layoutData>-->
-							<!--				<l:GridData span="XL4 L5 M6 S6"/>-->
-							<!--			</layoutData>-->
-							<!--		</DatePicker>-->
-							<!--		<Label text="{i18n>GrossAmount}"/>-->
-							<!--		<Input value="{ReferenceNumber}" required="true">-->
-							<!--			<layoutData>-->
-							<!--				<l:GridData span="XL2 L3 M4 S4"/>-->
-							<!--			</layoutData>-->
-							<!--		</Input>-->
-							<!--		<Input value="{CurrencyUnits}" required="true">-->
-							<!--			<layoutData>-->
-							<!--				<l:GridData span="XL2 L4 M5 S5"/>-->
-							<!--			</layoutData>-->
-							<!--		</Input>-->
-							<!--		<Label text="{i18n>AutoCalcTax}"/>-->
-							<!--		<CheckBox select="onSelectAutoCalcTax"/>-->
-							<!--		<Label text="{i18n>TaxAmount}"/>-->
-							<!--		<Input value="{TaxAmount}" enabled="{wizardView>/isEnabledAutoCalcTax}">-->
-							<!--			<layoutData>-->
-							<!--				<l:GridData span="XL4 L5 M6 S6"/>-->
-							<!--			</layoutData>-->
-							<!--		</Input>-->
-							<!--		<Label text="{i18n>Description}"/>-->
-							<!--		<Input value="{Description}">-->
-							<!--			<layoutData>-->
-							<!--				<l:GridData span="XL4 L5 M6 S6"/>-->
-							<!--			</layoutData>-->
-							<!--		</Input>-->
-							<!--		<Label text="{i18n>RequesterID}"/>-->
-							<!--		<Input value="{RequesterID}" required="true">-->
-							<!--			<layoutData>-->
-							<!--				<l:GridData span="XL4 L5 M6 S6"/>-->
-							<!--			</layoutData>-->
-							<!--		</Input>-->
-							<!--		<Label text="{i18n>CreditMemo}"/>-->
-							<!--		<CheckBox select="onSelectCredit"/>-->
-							<!--		<Label text="{i18n>CreditMemoReferenceDate}"/>-->
-							<!--		<DatePicker enabled="{wizardView>/isEnabledCredit}" placeholder="{i18n>EnterDate}" id="DP2" change="handleChange"-->
-							<!--			class="sapUiSmallMarginBottom">-->
-							<!--			<layoutData>-->
-							<!--				<l:GridData span="XL4 L5 M6 S6"/>-->
-							<!--			</layoutData>-->
-							<!--		</DatePicker>-->
-							<!--		<Label text="{i18n>CreditMemoReferenceNumber}"/>-->
-							<!--		<Input value="{CreditMemoReferenceNumber}" enabled="{wizardView>/isEnabledCredit}">-->
-							<!--			<layoutData>-->
-							<!--				<l:GridData span="XL4 L5 M6 S6"/>-->
-							<!--			</layoutData>-->
-							<!--		</Input>-->
-							<!--	</form:content>-->
-							<!--</form:SimpleForm>-->
 						</WizardStep>
-						<WizardStep id="idAccountingData" validated="true" title="{i18n>accountingDataTitle}" complete="onComplete">
-							<smartTable:SmartTable id="LineItemsSmartTable" entitySet="LineItem" smartFilterId="smartFilterBar" tableType="ResponsiveTable"
-								useExportToExcel="false" useVariantManagement="false" useTablePersonalisation="false" header="Line Items"
-								showRowCount="true" persistencyKey="SmartTableAnalytical_Explored" class="sapUiResponsiveContentPadding"
-								editable="true">
+						<WizardStep id="idAccountingData" validated="true" title="{i18n>accountingDataTitle}" activate="onActivateGeneralInfo">
+							<Label text="Line Item Balance"/>
+							<Label text="{to_LineItem/CurrencyCode}"/>
+							<smartTable:SmartTable id="idLineItemsSmartTable" entitySet="LineItem" smartFilterId="smartFilterBar" tableType="ResponsiveTable"
+								useExportToExcel="false" useVariantManagement="false" useTablePersonalisation="false" header="{i18n>lineItemsTitle}" showRowCount="true"
+								persistencyKey="SmartTableAnalytical_Explored" class="sapUiResponsiveContentPadding" editable="true" fieldChange="onFieldChange">
 								<smartTable:customToolbar>
 									<OverflowToolbar design="Transparent">
 										<ToolbarSpacer/>
@@ -172,78 +81,11 @@
 								</smartTable:customToolbar>
 								<Table mode="Delete" delete="onDelete" id="idAccountingDataTable"></Table>
 							</smartTable:SmartTable>
-							<!--<table:Table id="idAccountingDataTable" rows="{tableView>/}" selectionMode="MultiToggle" visibleRowCount="7" ariaLabelledBy="title"-->
-							<!--	class="sapUiResponsiveMargin">-->
-							<!--	<table:extension>-->
-							<!--		<OverflowToolbar>-->
-							<!--<Title id="title" text="Products"/>-->
-							<!--			<ToolbarSpacer/>-->
-							<!--			<Button icon="sap-icon://add" press="onPressAdd" type="Transparent"/>-->
-							<!--			<Button text="{i18n>Delete}" press="onPressDelete" type="Transparent"/>-->
-							<!--			<Button icon="sap-icon://upload" press="onPressUpload" type="Transparent"/>-->
-							<!--		</OverflowToolbar>-->
-							<!--	</table:extension>-->
-							<!--	<table:columns>-->
-							<!--		<table:Column width="25rem">-->
-							<!--			<Label text="{i18n>Description}"/>-->
-							<!--			<table:template>-->
-							<!--				<Input value="{tableView>Description}"/>-->
-							<!--			</table:template>-->
-							<!--		</table:Column>-->
-							<!--		<table:Column>-->
-							<!--			<Label text="{i18n>Amount}"/>-->
-							<!--			<table:template>-->
-							<!--				<Input value="{tableView>Amount}"/>-->
-							<!--			</table:template>-->
-							<!--		</table:Column>-->
-							<!--		<table:Column>-->
-							<!--			<Label text="{i18n>CreditDebit}"/>-->
-							<!--			<table:template>-->
-							<!--				<Input value="{tableView>CreditDebit}"/>-->
-							<!--			</table:template>-->
-							<!--		</table:Column>-->
-							<!--		<table:Column>-->
-							<!--			<Label text="{i18n>TaxCode}"/>-->
-							<!--			<table:template>-->
-							<!--				<Input value="{tableView>TaxCode}"/>-->
-							<!--			</table:template>-->
-							<!--		</table:Column>-->
-							<!--		<table:Column>-->
-							<!--			<Label text="{i18n>CompanyCode}"/>-->
-							<!--			<table:template>-->
-							<!--				<Input value="{tableView>CompanyCode}"/>-->
-							<!--			</table:template>-->
-							<!--		</table:Column>-->
-							<!--		<table:Column>-->
-							<!--			<Label text="{i18n>GLAccount}"/>-->
-							<!--			<table:template>-->
-							<!--				<Input value="{tableView>GLAccount}"/>-->
-							<!--			</table:template>-->
-							<!--		</table:Column>-->
-							<!--		<table:Column>-->
-							<!--			<Label text="{i18n>CostCenter}"/>-->
-							<!--			<table:template>-->
-							<!--				<Input value="{tableView>CostCenter}"/>-->
-							<!--			</table:template>-->
-							<!--		</table:Column>-->
-							<!--		<table:Column>-->
-							<!--			<Label text="{i18n>ProfitCenter}"/>-->
-							<!--			<table:template>-->
-							<!--				<Input value="{tableView>ProfitCenter}"/>-->
-							<!--			</table:template>-->
-							<!--		</table:Column>-->
-							<!--		<table:Column >-->
-							<!--			<Label text="{i18n>WBSElement}"/>-->
-							<!--			<table:template>-->
-							<!--				<Input value="{tableView>WBSElement}"/>-->
-							<!--			</table:template>-->
-							<!--		</table:Column>-->
-							<!--	</table:columns>-->
-							<!--</table:Table>-->
 						</WizardStep>
-						<WizardStep id="idSupportingDocument" title="supportingDocumentTitle" validated="false">
+						<WizardStep title="{i18n>supportingDocumentTitle}" validated="false">
 							<UploadCollection id="idUploadSupportingDocument" fileType="pdf" mode="SingleSelectLeft" beforeUploadStarts="onBeforeUploadStarts"
-								fileDeleted="onPressFileDeleted" uploadComplete="onUploadComplete" class="sapUiResponsiveMargin" change="onChange">
+								fileDeleted="onPressFileDeleted" uploadComplete="onUploadComplete" class="sapUiResponsiveMargin" change="onChange"
+								instantUpload="false">
 								<toolbar>
 									<OverflowToolbar id="myId">
 										<Title id="attachmentTitle"/>
@@ -252,18 +94,18 @@
 										<UploadCollectionToolbarPlaceholder/>
 									</OverflowToolbar>
 								</toolbar>
-								<items>
-									<UploadCollectionItem documentId="ID123" fileName="File Name 1">
-										<!--<statuses>-->
-										<!--	<ObjectStatus title="{wizardView>/Title}" text="{wizardView>/Text}" state="{state}"/>-->
-										<!--</statuses>-->
-									</UploadCollectionItem>
-									<UploadCollectionItem documentId="ID456" fileName="File Name 2">
-										<!--<statuses>-->
-										<!--	<ObjectStatus title="{wizardView>/Title}" text="{wizardView>/Text}" state="{state}"/>-->
-										<!--</statuses>-->
-									</UploadCollectionItem>
-								</items>
+								<!--<items>-->
+								<!--	<UploadCollectionItem documentId="{BatchId}" fileName="{FileName}">-->
+								<!--		<statuses>-->
+								<!--			<ObjectStatus title="{wizardView>/Title}" text="{wizardView>/Text}" state="{state}"/>-->
+								<!--		</statuses>-->
+								<!--	</UploadCollectionItem>-->
+									<!--	<UploadCollectionItem documentId="ID456" fileName="File Name 2">-->
+									<!--		<statuses>-->
+									<!--			<ObjectStatus title="{wizardView>/Title}" text="{wizardView>/Text}" state="{state}"/>-->
+									<!--		</statuses>-->
+									<!--	</UploadCollectionItem>-->
+								<!--</items>-->
 							</UploadCollection>
 						</WizardStep>
 					</Wizard>
@@ -271,7 +113,8 @@
 				<f:footer>
 					<OverflowToolbar>
 						<ToolbarSpacer/>
-						<Button text="{i18n>Submit}" type="Emphasized" enabled="{= ${/submitButtonEnabled}==='true'}"/>
+						<!--<Button text="{i18n>Submit}" type="Emphasized" enabled="{= ${/submitButtonEnabled}==='true'}"/>-->
+						<Button text="{i18n>Submit}" type="Emphasized" press=".onPressSubmit"/>
 						<Button text="{i18n>Cancel}" type="Transparent" press="handleWizardCancel"/>
 					</OverflowToolbar>
 				</f:footer>

@@ -7,7 +7,7 @@
 						<smartField:SmartField value="{Title}"/>
 					</smartForm:GroupElement>
 					<smartForm:GroupElement>
-						<smartField:SmartField value="{Name}"/>
+						<smartField:SmartField value="{Name}" change="onChangeGeneralInfo"/>
 					</smartForm:GroupElement>
 					<smartForm:GroupElement>
 						<smartField:SmartField value="{Street}"/>
