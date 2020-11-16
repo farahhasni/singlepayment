@@ -7,7 +7,7 @@
 			<f:DynamicPage id="idDynamicPage" class="sapUiNoContentPadding" showFooter="true" fitContent="true">
 				<f:content>
 					<Wizard id="idWizard" class="sapUiResponsivePadding--header sapUiResponsivePadding--content">
-						<WizardStep id="idGeneralInformation" title="{i18n>generalInformationTitle}" validated="true" >
+						<WizardStep id="idGeneralInformation" title="{i18n>generalInformationTitle}">
 							<smartForm:SmartForm id="idGeneralInfo" editable="true">
 								<smartForm:layout>
 									<smartForm:Layout labelSpanL="4" labelSpanM="4" emptySpanL="5"/>
@@ -39,7 +39,7 @@
 										<smartField:SmartField value="{DocumentDate}"/>
 									</smartForm:GroupElement>
 									<smartForm:GroupElement>
-										<smartField:SmartField value="{GrossAmount}"/>
+										<smartField:SmartField id="idGrossAmount" value="{GrossAmount}" change="._onChangeAmount"/>
 									</smartForm:GroupElement>
 									<smartForm:GroupElement>
 										<smartField:SmartField value="{TaxAmountIndicator}" change="onSelectAutoCalcTax"/>
@@ -65,9 +65,10 @@
 								</smartForm:Group>
 							</smartForm:SmartForm>
 						</WizardStep>
-						<WizardStep id="idAccountingData" validated="true" title="{i18n>accountingDataTitle}" activate="onActivateGeneralInfo">
-							<Label text="Line Item Balance"/>
-							<Label text="{to_LineItem/CurrencyCode}"/>
+						<WizardStep id="idAccountingData" validated="true" title="{i18n>accountingDataTitle}">
+							<Label text="Line Item Balance: "/>
+							<Label text="{wizardView>/LineItemBalance}"/>
+							<Label text="{wizardView>/CurrencyUnit}"/>
 							<smartTable:SmartTable id="idLineItemsSmartTable" entitySet="LineItem" smartFilterId="smartFilterBar" tableType="ResponsiveTable"
 								useExportToExcel="false" useVariantManagement="false" useTablePersonalisation="false" header="{i18n>lineItemsTitle}" showRowCount="true"
 								persistencyKey="SmartTableAnalytical_Explored" class="sapUiResponsiveContentPadding" editable="true" fieldChange="onFieldChange">
@@ -76,7 +77,9 @@
 										<ToolbarSpacer/>
 										<Button icon="sap-icon://add" press="onPressAdd" type="Transparent"/>
 										<Button icon="sap-icon://complete" press="onPressValidate" type="Transparent"/>
-										<Button icon="sap-icon://upload" press="onPressUpload" type="Transparent"/>
+										<!--<Button icon="sap-icon://upload" press="onPressUpload" type="Transparent"/>-->
+										<u:FileUploader id="FileUploaderId" sameFilenameAllowed="true" iconOnly="true" buttonOnly="true" fileType="XLSX,xlsx,CSV,csv,xls"
+											icon="sap-icon://upload" style="Transparent" change="onUpload"/>
 									</OverflowToolbar>
 								</smartTable:customToolbar>
 								<Table mode="Delete" delete="onDelete" id="idAccountingDataTable"></Table>
@@ -84,8 +87,7 @@
 						</WizardStep>
 						<WizardStep title="{i18n>supportingDocumentTitle}" validated="false">
 							<UploadCollection id="idUploadSupportingDocument" fileType="pdf" mode="SingleSelectLeft" beforeUploadStarts="onBeforeUploadStarts"
-								fileDeleted="onPressFileDeleted" uploadComplete="onUploadComplete" class="sapUiResponsiveMargin" change="onChange"
-								instantUpload="false">
+								fileDeleted="onPressFileDeleted" uploadComplete="onUploadComplete" class="sapUiResponsiveMargin" change="onChange" instantUpload="false">
 								<toolbar>
 									<OverflowToolbar id="myId">
 										<Title id="attachmentTitle"/>
@@ -94,18 +96,6 @@
 										<UploadCollectionToolbarPlaceholder/>
 									</OverflowToolbar>
 								</toolbar>
-								<!--<items>-->
-								<!--	<UploadCollectionItem documentId="{BatchId}" fileName="{FileName}">-->
-								<!--		<statuses>-->
-								<!--			<ObjectStatus title="{wizardView>/Title}" text="{wizardView>/Text}" state="{state}"/>-->
-								<!--		</statuses>-->
-								<!--	</UploadCollectionItem>-->
-									<!--	<UploadCollectionItem documentId="ID456" fileName="File Name 2">-->
-									<!--		<statuses>-->
-									<!--			<ObjectStatus title="{wizardView>/Title}" text="{wizardView>/Text}" state="{state}"/>-->
-									<!--		</statuses>-->
-									<!--	</UploadCollectionItem>-->
-								<!--</items>-->
 							</UploadCollection>
 						</WizardStep>
 					</Wizard>
