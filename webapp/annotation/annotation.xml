@@ -34,6 +34,10 @@
 							<PropertyValue Property="Value" Path="TaxCode"/>
 							<PropertyValue Property="Label" String="{@i18n&gt;taxCodeLabel}"/>
 						</Record>
+							<Record Type="UI.DataField">
+							<PropertyValue Property="Value" Path="CompanyCode"/>
+							<PropertyValue Property="Label" String="{@i18n&gt;companyCodeLabel}"/>
+						</Record>
 						<Record Type="UI.DataField">
 							<PropertyValue Property="Value" Path="GlAccount"/>
 							<PropertyValue Property="Label" String="{@i18n&gt;glAccountLabel}"/>
@@ -58,7 +62,7 @@
 				<Annotation Term="Common.FieldControl" EnumMember="Common.FieldControlType/Mandatory"/>
 				<Annotation Term="Common.ValueList">
 					<Record Type="Common.ValueListType">
-						<PropertyValue Property="CollectionPath" String="ZB_FIN_TitleVH"/>
+						<PropertyValue Property="CollectionPath" String="ZB_FIN_VH_Title"/>
 						<PropertyValue Property="Parameters">
 							<Collection>
 								<Record Type="Common.ValueListParameterInOut">
@@ -73,14 +77,14 @@
 					</Record>
 				</Annotation>
 			</Annotations>
-			<Annotations Target="Metadata.ZB_FIN_CreditDebitVHType/CreditDebit">
+			<Annotations Target="Metadata.ZB_FIN_VH_CreditDebitType/CreditDebit">
 				<Annotation Term="Common.Text" Path="Description"/>
 			</Annotations>
 			<Annotations Target="Metadata.LineItemType/CreditDebit">
 				<Annotation Term="Common.ValueListWithFixedValues" Bool="true"/>
 				<Annotation Term="Common.ValueList">
 					<Record Type="Common.ValueListType">
-						<PropertyValue Property="CollectionPath" String="ZB_FIN_CreditDebitVH"/>
+						<PropertyValue Property="CollectionPath" String="ZB_FIN_VH_CreditDebit"/>
 						<PropertyValue Property="Parameters">
 							<Collection>
 								<Record Type="Common.ValueListParameterInOut">
@@ -95,7 +99,7 @@
 					</Record>
 				</Annotation>
 			</Annotations>
-			<Annotations Target="Metadata.ZB_FIN_CreditDebitVHType/Description">
+			<Annotations Target="Metadata.ZB_FIN_VH_CreditDebitType/Description">
 				<Annotation Term="Common.Text" Path="Description"/>
 			</Annotations>
 			<Annotations Target="Metadata.GeneralInfoType/CompanyCode">
@@ -190,10 +194,13 @@
 				<Annotation Term="Common.FieldControl" EnumMember="Common.FieldControlType/Mandatory"/>
 				<Annotation Term="Common.Label" String="{@i18n&gt;instructionKeyLabel}"/>
 			</Annotations>
-			<Annotations Target="Metadata.ZB_FIN_TitleVHType/StandardTextKey">
+			<Annotations Target="Metadata.ZB_FIN_VH_TitleType/StandardTextKey">
 				<Annotation Term="Common.Text" Path="Description"/>
 			</Annotations>
 			<Annotations Target="Metadata.LineItemType/ItemNumber"/>
+			<Annotations Target="Metadata.LineItemType/CurrencyCode">
+				<Annotation Term="UI.Hidden" Bool="true"/>
+			</Annotations>
 		</Schema>
 	</edmx:DataServices>
 </edmx:Edmx>

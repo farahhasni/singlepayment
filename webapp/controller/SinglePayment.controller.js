@@ -4,7 +4,7 @@ sap.ui.define([
 	"../model/formatter",
 	"sap/ui/model/Filter",
 	"sap/ui/model/FilterOperator",
-	"sap/m/UploadCollectionParameter",
+	"sap/m/UploadCollectionItem",
 	"sap/m/UploadCollection",
 	"sap/ui/core/Fragment",
 	"sap/m/ColumnListItem",
@@ -14,7 +14,7 @@ sap.ui.define([
 	"sap/m/MessageBox",
 	"../util/xlsx"
 
-], function (BaseController, JSONModel, formatter, Filter, FilterOperator, UploadCollectionParameter, UploadCollection, Fragment,
+], function (BaseController, JSONModel, formatter, Filter, FilterOperator, UploadCollectionItem, UploadCollection, Fragment,
 	ColumnListItem,
 	SmartField, FormValidator, ObjectStatus, MessageBox, xlsx) {
 	"use strict";
@@ -40,11 +40,12 @@ sap.ui.define([
 				isNameSelected: false,
 				isOneTimeVendorSelected: true,
 				isAbnNumberMandatory: true,
+				isPDFFile: true,
 				BinaryFile: "",
 				LineItemBalance: 0,
 				CurrencyUnit: "",
 				PrimaryIndicator: "",
-				CreditDebit:"S"
+				CreditDebit: "S"
 			});
 			this.getView().setModel(oViewModel, "wizardView");
 
@@ -173,7 +174,7 @@ sap.ui.define([
 						"ItemNumber": sItemNumber,
 						"Description": "",
 						"Amount": 0.00,
-						"CreditDebit": "H",
+						"CreditDebit": this.getView().getModel("wizardView").getProperty("/CreditDebit"),
 						"TaxCode": "",
 						"CompanyCode": "",
 						"GlAccount": "",
@@ -241,12 +242,18 @@ sap.ui.define([
 			// sap.m.MessageToast.show(iTotalAmount);
 		},
 		onPressValidate: function () {
+			var aDeferredGroup = this.getModel().getDeferredGroups().push("batchCreate");
+			this.getModel().setDeferredGroups(aDeferredGroup);
+			var mParameters = {
+				groupId: "batchCreate"
+			};
 			if (this.getModel().hasPendingChanges()) {
 				this._updateLineItems(this._aExistingEntries);
 				for (var i = 0; i < this._aExistingEntries.length; i++) {
 					this.getView().getModel("tableView").getData()[i].ValidationFlag = "X";
 					var oEntry = this.getView().getModel("tableView").getData()[i];
-					this.getModel().create('/LineItem', oEntry, null);
+
+					this.getModel().create('/LineItem', oEntry, mParameters);
 				}
 			}
 		},
@@ -270,6 +277,9 @@ sap.ui.define([
 					workbook.SheetNames.forEach(function (sheetName) {
 						// Here is your object for every sheet in workbook
 						excelData = XLSX.utils.sheet_to_row_object_array(workbook.Sheets[sheetName]);
+						XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], {
+							header: ["A", "B", "C", "D", "E", "F", "G", "H", "I"]
+						})
 						var json_object = JSON.stringify(excelData);
 						lineItemsModel.setData(json_object);
 						lineItemsModel.refresh(true);
@@ -283,6 +293,7 @@ sap.ui.define([
 				reader.readAsBinaryString(file);
 			}
 		},
+
 		// onUpload: function (e) {
 		// 	// this._import(e.getParameter("files") && e.getParameter("files")[0]);
 		// 	var file = e.getParameter("files") && e.getParameter("files")[0];
@@ -327,6 +338,11 @@ sap.ui.define([
 			// });
 		},
 
+		onCompleteGeneralInfo: function (oEvent) {
+			this.getView().byId("idGeneralInformation").setNextStep("idAccountingData");
+			this.onPressAdd();
+		},
+
 		onPressFileDeleted: function (oEvent) {
 			// this.deleteItemById(oEvent.getParameter("documentId"));
 			// MessageToast.show("FileDeleted event triggered.");
@@ -334,22 +350,29 @@ sap.ui.define([
 
 		onPressSetPrimary: function (oEvent) {
 			var oSetPrimary = this.byId("idUploadSupportingDocument").getSelectedItem(),
-				aDocuments = this.byId("idUploadSupportingDocument").getItems();
+				aDocuments = this.byId("idUploadSupportingDocument").getItems(),
+				sFileName = this.byId("idUploadSupportingDocument").getSelectedItem().getProperty("fileName");
 
 			this.getModel("wizardView").setProperty("/PrimaryIndicator", "");
 
 			if (oSetPrimary) {
+
 				aDocuments.forEach(function (oDocument) {
 					oDocument.removeAllStatuses();
 				}.bind(this));
 
-				var oStatus = new ObjectStatus({
+				this._oStatus = new ObjectStatus({
 					title: "Status",
 					text: "Primary File"
 				});
 
-				oSetPrimary.addStatus(oStatus);
-				this.getModel("wizardView").setProperty("/PrimaryIndicator", "X");
+				if (/([a-zA-Z0-9\s_\\.\-\(\):])+(.pdf)$/i.test(sFileName)) {
+					oSetPrimary.addStatus(this._oStatus);
+					this.getModel("wizardView").setProperty("/PrimaryIndicator", "X");
+				} else {
+					MessageBox.error(this.getResourceBundle().getText("setPrimaryFileText"));
+					oSetPrimary.setSelected(false);
+				}
 
 			}
 		},
@@ -383,8 +406,11 @@ sap.ui.define([
 						onClose: function (oAction) {
 							if (oAction === MessageBox.Action.OK) {
 								this.getModel().resetChanges();
-								this.getModel().refresh(true);
-								this.getRouter().navTo("singlePayment");
+								// this.getModel().refresh(true);
+								this._createEntry();
+								// this.getRouter().navTo("singlePayment", {
+								// 	BatchId: this._getUUID()
+								// }, true);
 							}
 						}.bind(this)
 					});
@@ -410,21 +436,41 @@ sap.ui.define([
 		},
 
 		onSelectCredit: function (oEvent) {
+			var aLineItems = this.byId("idAccountingDataTable").getItems();
+
 			if (oEvent.getParameters().value === true) {
 				this.getView().getModel("wizardView").setProperty("/isEnabledCredit", true);
+				this.getView().getModel("wizardView").setProperty("/CreditDebit", "H");
+				if (aLineItems.length) {
+					aLineItems.forEach(function (oLineItem) {
+						var sPath = oLineItem.getBindingContextPath();
+						this.getView().getModel().setProperty(sPath + "/CreditDebit", "H");
+					}.bind(this));
+				}
 			} else {
 				this.getView().getModel("wizardView").setProperty("/isEnabledCredit", false);
+				this.getView().getModel("wizardView").setProperty("/CreditDebit", "S");
+				if (aLineItems.length) {
+					aLineItems.forEach(function (oLineItem) {
+						var sPath = oLineItem.getBindingContextPath();
+						this.getView().getModel().setProperty(sPath + "/CreditDebit", "S");
+					}.bind(this));
+				}
 			}
 		},
 
 		onChange: function (oEvent) {
 			var oUploadCollection = oEvent.getSource();
 			// Header Token
-			var oCustomerHeaderToken = new UploadCollectionParameter({
-				name: "x-csrf-token",
-				value: "securityTokenFromModel"
-			});
-			oUploadCollection.addHeaderParameter(oCustomerHeaderToken);
+			var oCustomerHeaderToken = new UploadCollectionItem();
+
+			if (this.getModel("wizardView").getProperty("/isPDFFile")) {
+				if (/([a-zA-Z0-9\s_\\.\-\(\):])+(.pdf)$/i.test(oEvent.getParameter("files")[0].name)) {
+					this.getModel("wizardView").setProperty("/isPDFFile", false);
+					oCustomerHeaderToken.setSelected(true);
+					oCustomerHeaderToken.addStatus(this._oStatus);
+				}
+			}
 
 			var reader = new FileReader();
 			var file = oEvent.getParameter("files")[0];
@@ -518,6 +564,10 @@ sap.ui.define([
 			var reader = new FileReader();
 			var file = oEvent.getParameter("files")[0];
 
+			//file.name
+			//file.size
+			// file.type
+
 			reader.onload = function (e) {
 				var data = e.target.result;
 				var base64EncodedStr = btoa(unescape(encodeURIComponent(data)));
@@ -529,16 +579,16 @@ sap.ui.define([
 		},
 
 		onUploadComplete: function (oEvent) {
-			var sUploadedFileName = oEvent.getParameter("files")[0].fileName;
+			// var sUploadedFileName = oEvent.getParameter("files")[0].fileName;
 
-			var oUploadCollection = this.byId("UploadCollection");
+			// var oUploadCollection = this.byId("UploadCollection");
 
-			for (var i = 0; i < oUploadCollection.getItems().length; i++) {
-				if (oUploadCollection.getItems()[i].getFileName() === sUploadedFileName) {
-					oUploadCollection.removeItem(oUploadCollection.getItems()[i]);
-					break;
-				}
-			}
+			// for (var i = 0; i < oUploadCollection.getItems().length; i++) {
+			// 	if (oUploadCollection.getItems()[i].getFileName() === sUploadedFileName) {
+			// 		oUploadCollection.removeItem(oUploadCollection.getItems()[i]);
+			// 		break;
+			// 	}
+			// }
 		},
 
 		// onBeforeUploadStarts: function (oEvent) {
@@ -668,20 +718,7 @@ sap.ui.define([
 			var oViewModel = this.getModel("wizardView");
 
 			this.getModel().metadataLoaded().then(function () {
-				var oEntry = this.getModel().createEntry("/GeneralInfo", {
-					properties: {
-						BatchID: this._getUUID()
-					},
-					success: function (oData) {
-						oViewModel.setProperty("/busy", false);
-					}.bind(this),
-					error: function (oError) {
-						oViewModel.setProperty("/busy", false);
-						// MessageBox.error(JSON.parse(oError.responseText).error.message.value);
-					}
-				});
-
-				this._bindView(oEntry.getPath());
+				this._createEntry();
 			}.bind(this));
 		},
 
@@ -716,7 +753,6 @@ sap.ui.define([
 							// screen. This happens because route matched handler already calls '_bindView'
 							// while metadata is loaded.
 							oViewModel.setProperty("/busy", true);
-							this.getView().byId("idGeneralInformation").setShowNextButton(false);
 						});
 					},
 					dataReceived: function () {
@@ -725,7 +761,23 @@ sap.ui.define([
 				}
 			});
 		},
+		_createEntry: function (oEvent) {
+			var oViewModel = this.getModel("wizardView");
+			var oEntry = this.getModel().createEntry("/GeneralInfo", {
+				properties: {
+					BatchID: this._getUUID()
+				},
+				success: function (oData) {
+					oViewModel.setProperty("/busy", false);
+				}.bind(this),
+				error: function (oError) {
+					oViewModel.setProperty("/busy", false);
+					// MessageBox.error(JSON.parse(oError.responseText).error.message.value);
+				}
+			});
 
+			this._bindView(oEntry.getPath());
+		},
 		_updateLineItems: function (oEvent) {
 			// var oAccountingModel = this.getView().getModel("tableView");
 			// aExistingEntries = oAccountingModel.getData(),
@@ -738,7 +790,8 @@ sap.ui.define([
 						"BatchID": this._getUUID(),
 						"ItemNumber": (this._aExistingEntries.length + 1).toString(),
 						"Description": oContext.Description,
-						"Amount": oContext.Amount.toFixed(2),
+						// "Amount": oContext.Amount.toFixed(2),
+						"Amount": null,
 						"CreditDebit": oContext.CreditDebit,
 						"TaxCode": oContext.TaxCode,
 						"CompanyCode": oContext.CompanyCode,

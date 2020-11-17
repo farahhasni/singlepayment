@@ -7,7 +7,7 @@
 			<f:DynamicPage id="idDynamicPage" class="sapUiNoContentPadding" showFooter="true" fitContent="true">
 				<f:content>
 					<Wizard id="idWizard" class="sapUiResponsivePadding--header sapUiResponsivePadding--content">
-						<WizardStep id="idGeneralInformation" title="{i18n>generalInformationTitle}">
+						<WizardStep id="idGeneralInformation" title="{i18n>generalInformationTitle}" complete="onCompleteGeneralInfo">
 							<smartForm:SmartForm id="idGeneralInfo" editable="true">
 								<smartForm:layout>
 									<smartForm:Layout labelSpanL="4" labelSpanM="4" emptySpanL="5"/>
@@ -66,9 +66,11 @@
 							</smartForm:SmartForm>
 						</WizardStep>
 						<WizardStep id="idAccountingData" validated="true" title="{i18n>accountingDataTitle}">
-							<Label text="Line Item Balance: "/>
-							<Label text="{wizardView>/LineItemBalance}"/>
-							<Label text="{wizardView>/CurrencyUnit}"/>
+							<FlexBox alignItems="End" justifyContent="End">
+								<Label text="Line Item Balance: "/>
+								<Label text="{wizardView>/LineItemBalance}" />
+								<Label text="{wizardView>/CurrencyUnit}"/>
+							</FlexBox>
 							<smartTable:SmartTable id="idLineItemsSmartTable" entitySet="LineItem" smartFilterId="smartFilterBar" tableType="ResponsiveTable"
 								useExportToExcel="false" useVariantManagement="false" useTablePersonalisation="false" header="{i18n>lineItemsTitle}" showRowCount="true"
 								persistencyKey="SmartTableAnalytical_Explored" class="sapUiResponsiveContentPadding" editable="true" fieldChange="onFieldChange">
@@ -86,7 +88,7 @@
 							</smartTable:SmartTable>
 						</WizardStep>
 						<WizardStep title="{i18n>supportingDocumentTitle}" validated="false">
-							<UploadCollection id="idUploadSupportingDocument" fileType="pdf" mode="SingleSelectLeft" beforeUploadStarts="onBeforeUploadStarts"
+							<UploadCollection id="idUploadSupportingDocument" mode="SingleSelectLeft" beforeUploadStarts="onBeforeUploadStarts"
 								fileDeleted="onPressFileDeleted" uploadComplete="onUploadComplete" class="sapUiResponsiveMargin" change="onChange" instantUpload="false">
 								<toolbar>
 									<OverflowToolbar id="myId">
