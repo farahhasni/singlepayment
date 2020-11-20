@@ -71,7 +71,7 @@
 								<Label text="{wizardView>/LineItemBalance}" />
 								<Label text="{wizardView>/CurrencyUnit}"/>
 							</FlexBox>
-							<smartTable:SmartTable id="idLineItemsSmartTable" entitySet="LineItem" smartFilterId="smartFilterBar" tableType="ResponsiveTable"
+							<smartTable:SmartTable id="idLineItemsSmartTable" entitySet="LineItem" smartFilterId="smartFilterBar" tableType="Table"
 								useExportToExcel="false" useVariantManagement="false" useTablePersonalisation="false" header="{i18n>lineItemsTitle}" showRowCount="true"
 								persistencyKey="SmartTableAnalytical_Explored" class="sapUiResponsiveContentPadding" editable="true" fieldChange="onFieldChange">
 								<smartTable:customToolbar>

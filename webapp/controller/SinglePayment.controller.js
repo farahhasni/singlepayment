@@ -41,6 +41,7 @@ sap.ui.define([
 				isOneTimeVendorSelected: true,
 				isAbnNumberMandatory: true,
 				isPDFFile: true,
+				isSubmitEnabled: false,
 				BinaryFile: "",
 				LineItemBalance: 0,
 				CurrencyUnit: "",
@@ -162,63 +163,132 @@ sap.ui.define([
 		 * @public
 		 */
 		onPressAdd: function () {
+			// var oTable = this.byId("idLineItemsSmartTable").getTable(),
+			// 	oAccountingModel = this.getView().getModel("tableView"),
+			// 	aExistingEntries = oAccountingModel.getData();
+
+			for (var i = 0; i < 5; i++) {
+				var oProperties = {
+					BatchID: this._getUUID(),
+					ItemNumber: "0",
+					Description: "",
+					Amount: "0.00",
+					CreditDebit: this.getView().getModel("wizardView").getProperty("/CreditDebit"),
+					TaxCode: "",
+					CompanyCode: "",
+					GlAccount: "",
+					CostCenter: "",
+					ProfitCenter: "",
+					WbsElement: ""
+				};
+
+				this._createLineItem(oProperties);
+
+				// var sItemNumber = (aExistingEntries.length + 1).toString();
+				// var oEntry = this.getModel().createEntry("LineItem", {
+				// 	properties: {
+				// 		"BatchID": this._getUUID(),
+				// 		"ItemNumber": "0",
+				// 		"Description": "",
+				// 		"Amount": 0.00,
+				// 		"CreditDebit": this.getView().getModel("wizardView").getProperty("/CreditDebit"),
+				// 		"TaxCode": "",
+				// 		"CompanyCode": "",
+				// 		"GlAccount": "",
+				// 		"CostCenter": "",
+				// 		"ProfitCenter": "",
+				// 		"WbsElement": ""
+				// 	} || {}
+				// });
+				// var oColumnListItem = new ColumnListItem({
+				// 	cells: oTable.getColumns().map(function (oColumn) {
+
+				// 		if (oColumn.getCustomData()[0].getValue().columnKey === "ItemNumber") {
+				// 			return new SmartField({
+				// 				value: "{" + oColumn.getCustomData()[0].getValue().columnKey + "}",
+				// 				editable: false
+				// 			});
+				// 		} else if (oColumn.getCustomData()[0].getValue().columnKey === "Amount") {
+				// 			return new SmartField({
+				// 				value: "{" + oColumn.getCustomData()[0].getValue().columnKey + "}",
+				// 				change: [function (oEvent) {
+				// 					this._onChangeAmount(oEvent);
+				// 				}, this]
+				// 			});
+				// 		} else {
+				// 			return new SmartField({
+				// 				value: "{" + oColumn.getCustomData()[0].getValue().columnKey + "}"
+				// 					// change: [this._onChangeAmount,this]
+				// 			});
+				// 		}
+
+				// 	}.bind(this))
+				// });
+
+			
+			
+				// oColumnListItem.setBindingContext(oEntry);
+				// oTable.addItem(oColumnListItem);
+				// aExistingEntries.push(oColumnListItem.getBindingContext().getProperty());
+			}
+
+			this._updateItemNumber();
+		},
+
+		_updateItemNumber: function () {
+			var aLineItems = this.byId("idAccountingDataTable").getItems(),
+				iItemNumber = 1;
+
+			aLineItems.forEach(function (oLineItem) {
+				var sPath = oLineItem.getBindingContextPath();
+
+				this.getView().getModel().setProperty(sPath + "/ItemNumber", iItemNumber.toString());
+				iItemNumber++;
+			}.bind(this));
+		},
+
+		_createLineItem: function (oProperties) {
 			var oTable = this.byId("idLineItemsSmartTable").getTable(),
 				oAccountingModel = this.getView().getModel("tableView"),
 				aExistingEntries = oAccountingModel.getData();
+			var oEntry = this.getModel().createEntry("LineItem", {
+				properties: oProperties
+			} || {});
 
-			for (var i = 0; i < 5; i++) {
-				var sItemNumber = (aExistingEntries.length + 1).toString();
-				var oEntry = this.getModel().createEntry("LineItem", {
-					properties: {
-						"BatchID": this._getUUID(),
-						"ItemNumber": sItemNumber,
-						"Description": "",
-						"Amount": 0.00,
-						"CreditDebit": this.getView().getModel("wizardView").getProperty("/CreditDebit"),
-						"TaxCode": "",
-						"CompanyCode": "",
-						"GlAccount": "",
-						"CostCenter": "",
-						"ProfitCenter": "",
-						"WbsElement": ""
-					} || {}
-				});
-				var oColumnListItem = new ColumnListItem({
-					cells: oTable.getColumns().map(function (oColumn) {
+			var oColumnListItem = new ColumnListItem({
+				cells: oTable.getColumns().map(function (oColumn) {
 
-						if (oColumn.getCustomData()[0].getValue().columnKey === "ItemNumber") {
-							return new SmartField({
-								value: "{" + oColumn.getCustomData()[0].getValue().columnKey + "}",
-								editable: false
-							});
-						} else if (oColumn.getCustomData()[0].getValue().columnKey === "Amount") {
-							return new SmartField({
-								value: "{" + oColumn.getCustomData()[0].getValue().columnKey + "}",
-								change: [function (oEvent) {
-									this._onChangeAmount(oEvent);
-								}, this]
-							});
-						} else {
-							return new SmartField({
-								value: "{" + oColumn.getCustomData()[0].getValue().columnKey + "}"
-									// change: [this._onChangeAmount,this]
-							});
-						}
+					if (oColumn.getCustomData()[0].getValue().columnKey === "ItemNumber") {
+						return new SmartField({
+							value: "{" + oColumn.getCustomData()[0].getValue().columnKey + "}",
+							editable: false
+						});
+					} else if (oColumn.getCustomData()[0].getValue().columnKey === "Amount") {
+						return new SmartField({
+							value: "{" + oColumn.getCustomData()[0].getValue().columnKey + "}",
+							change: [function (oEvent) {
+								this._onChangeAmount(oEvent);
+							}, this]
+						});
+					} else {
+						return new SmartField({
+							value: "{" + oColumn.getCustomData()[0].getValue().columnKey + "}"
+								// change: [this._onChangeAmount,this]
+						});
+					}
 
-					}.bind(this))
-				});
+				}.bind(this))
+			});
 
-				this._aLineItems.push(oEntry.sPath);
-				oColumnListItem.setBindingContext(oEntry);
-				oTable.addItem(oColumnListItem);
-				aExistingEntries.push(oColumnListItem.getBindingContext().getProperty());
-			}
+			oColumnListItem.setBindingContext(oEntry);
+			oTable.addItem(oColumnListItem);
+			aExistingEntries.push(oColumnListItem.getBindingContext().getProperty());
+
 		},
 		_onChangeAmount: function (oEvent) {
 			var aLineItems = this.byId("idAccountingDataTable").getItems(),
-				aNewLineItems = [],
 				iTotalAmount = 0,
-				iGrossAmount = parseInt(this.byId("idGrossAmount").getValue(), 10),
+				iGrossAmount = parseFloat(this.byId("idGrossAmount").getValue()),
 				sCurrencyUnit = this.byId("idGrossAmount").getContent().getItems()[1].getValue();
 
 			aLineItems.forEach(function (oLineItem) {
@@ -227,12 +297,10 @@ sap.ui.define([
 				var oSelectedLineItem = oEvent.getSource().getBindingContext().getObject();
 
 				if (oExistedLineItem.BatchID === oSelectedLineItem.BatchID) {
-					aNewLineItems.push(oSelectedLineItem);
-					this.getView().getModel().setProperty(sPath + "/Amount", parseInt(oEvent.getParameters().newValue, 10));
-					iTotalAmount += this.getModel().getProperty(sPath + "/Amount");
+					this.getView().getModel().setProperty(sPath + "/Amount", oEvent.getParameters().newValue);
+					iTotalAmount +=  parseFloat(this.getModel().getProperty(sPath + "/Amount"));
 				} else {
-					aNewLineItems.push(oExistedLineItem);
-					iTotalAmount += parseInt(oExistedLineItem.Amount, 10);
+					iTotalAmount += parseFloat(oExistedLineItem.Amount);
 				}
 			}.bind(this));
 
@@ -242,50 +310,61 @@ sap.ui.define([
 			// sap.m.MessageToast.show(iTotalAmount);
 		},
 		onPressValidate: function () {
+			var aLineItems = this.byId("idAccountingDataTable").getItems();
 			var aDeferredGroup = this.getModel().getDeferredGroups().push("batchCreate");
 			this.getModel().setDeferredGroups(aDeferredGroup);
 			var mParameters = {
 				groupId: "batchCreate"
 			};
 			if (this.getModel().hasPendingChanges()) {
-				this._updateLineItems(this._aExistingEntries);
-				for (var i = 0; i < this._aExistingEntries.length; i++) {
-					this.getView().getModel("tableView").getData()[i].ValidationFlag = "X";
-					var oEntry = this.getView().getModel("tableView").getData()[i];
 
-					this.getModel().create('/LineItem', oEntry, mParameters);
-				}
+				aLineItems.forEach(function (oLineItem) {
+					var sPath = oLineItem.getBindingContextPath();
+					var oData = this.getView().getModel().getProperty(sPath);
+					this.getView().getModel().getProperty(sPath).ValidationFlag = "X"
+					this.getModel().create('/LineItem', oData, mParameters);
+				}.bind(this));
+				// this._updateLineItems(this._aExistingEntries);
+				// for (var i = 0; i < this._aExistingEntries.length; i++) {
+				// 	this.getView().getModel("tableView").getData()[i].ValidationFlag = "X";
+				// 	var oEntry = this.getView().getModel("tableView").getData()[i];
+
+				// }
 			}
 		},
 
-		onUpload: function (e) {
-			this._import(e.getParameter("files") && e.getParameter("files")[0]);
+		onUpload: function (oEvent) {
+			this._import(oEvent.getParameter("files") && oEvent.getParameter("files")[0]);
 		},
 
 		_import: function (file) {
-			var lineItemsModel = new JSONModel([]);
-			this.getView().setModel(lineItemsModel, "lineItemsModel");
+			var oExcelData = {};
 			var that = this;
-			var excelData = {};
+			var oTable = this.byId("idLineItemsSmartTable").getTable(),
+				oAccountingModel = this.getView().getModel("tableView"),
+				aExistingEntries = oAccountingModel.getData();
+
 			if (file && window.FileReader) {
 				var reader = new FileReader();
-				reader.onload = function (e) {
-					var data = e.target.result;
+				reader.onload = function (oEvent) {
+					var data = oEvent.target.result;
 					var workbook = XLSX.read(data, {
 						type: 'binary'
 					});
 					workbook.SheetNames.forEach(function (sheetName) {
-						// Here is your object for every sheet in workbook
-						excelData = XLSX.utils.sheet_to_row_object_array(workbook.Sheets[sheetName]);
-						XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], {
-							header: ["A", "B", "C", "D", "E", "F", "G", "H", "I"]
-						})
-						var json_object = JSON.stringify(excelData);
-						lineItemsModel.setData(json_object);
-						lineItemsModel.refresh(true);
+						oExcelData = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], {
+							header: ["Description", "Amount", "CreditDebit", "TaxCode", "CompanyCode", "GlAccount", "CostCenter", "ProfitCenter",
+								"WbsElement"
+							]
+						});
+
+						oExcelData.forEach(function (oProperties) {
+							oProperties.ItemNumber = "0";
+							var oEntry = that._createLineItem(oProperties);
+						});
+						that._updateItemNumber();
+
 					});
-					// lineItemsModel.setData(excelData);
-					// lineItemsModel.refresh(true);
 				};
 				reader.onerror = function (ex) {
 					sap.m.MessageToast.show(ex);
@@ -294,22 +373,6 @@ sap.ui.define([
 			}
 		},
 
-		// onUpload: function (e) {
-		// 	// this._import(e.getParameter("files") && e.getParameter("files")[0]);
-		// 	var file = e.getParameter("files") && e.getParameter("files")[0];
-		// 	if (file && window.FileReader) {
-		// 		var reader = new FileReader();
-		// 		var that = this;
-		// 		reader.onload = function (evn) {
-		// 			var strCSV = evn.target.result; //string in CSV 
-		// 			// var base64EncodedStr = btoa(unescape(encodeURIComponent(strCSV)));
-		// 			// sap.m.MessageToast.show(base64EncodedStr);
-		// 		};
-		// 		reader.readAsText(file);
-		// 	}
-
-		// },
-
 		onDelete: function (oEvent) {
 			var oLineItem = oEvent.getParameter("listItem").getBindingContext();
 
@@ -317,30 +380,13 @@ sap.ui.define([
 			oEvent.getParameter("listItem").getBindingContextPath();
 			oEvent.getSource().removeItem(oEvent.getParameter("listItem"));
 			this._onChangeAmount(oEvent);
-			// oTable.rebindTable();
+			this._updateItemNumber();
 
-			// var aLineItems = (oTable.getItems() || []).map(function (oItem) {
-			// 	// assuming that you are using the default model
-			// 	return oItem.getBindingContext().getObject();
-			// });
-
-			// var sIndex = aLineItems.indexOf(oLineItem);
-			// aLineItems.splice(sIndex, 1);
-			// 	if (!this._oCompetitiveStrategyTableTemplateUpdate) {
-			// 	this._oCompetitiveStrategyTableTemplateUpdate = this.byId("idColumnListItem").clone();
-			// }
-
-			// oTable.unbindAggregation("items");
-			// oTable.bindAggregation("items", {
-			// 	path: "LineItem",
-			// 	template: this._oCompetitiveStrategyTableTemplateUpdate,
-			// 	templateShareable: true
-			// });
 		},
 
 		onCompleteGeneralInfo: function (oEvent) {
 			this.getView().byId("idGeneralInformation").setNextStep("idAccountingData");
-			this.onPressAdd();
+			// this.onPressAdd();
 		},
 
 		onPressFileDeleted: function (oEvent) {
@@ -398,6 +444,7 @@ sap.ui.define([
 					});
 				}
 			}
+
 			// this.onPressValidate();
 			this.getModel().submitChanges({
 				success: function () {
@@ -470,6 +517,12 @@ sap.ui.define([
 					oCustomerHeaderToken.setSelected(true);
 					oCustomerHeaderToken.addStatus(this._oStatus);
 				}
+			}
+
+			if (oUploadCollection.getItems().length) {
+				this.getModel("wizardView").setProperty("/isSubmitEnabled", true);
+			} else {
+				this.getModel("wizardView").setProperty("/isSubmitEnabled", false);
 			}
 
 			var reader = new FileReader();
