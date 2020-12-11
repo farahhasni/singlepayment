@@ -34,7 +34,7 @@
 							<PropertyValue Property="Value" Path="TaxCode"/>
 							<PropertyValue Property="Label" String="{@i18n&gt;taxCodeLabel}"/>
 						</Record>
-							<Record Type="UI.DataField">
+						<Record Type="UI.DataField">
 							<PropertyValue Property="Value" Path="CompanyCode"/>
 							<PropertyValue Property="Label" String="{@i18n&gt;companyCodeLabel}"/>
 						</Record>
@@ -103,6 +103,7 @@
 				<Annotation Term="Common.Text" Path="Description"/>
 			</Annotations>
 			<Annotations Target="Metadata.GeneralInfoType/CompanyCode">
+				<Annotation Term="Common.FieldControl" EnumMember="Common.FieldControlType/Mandatory"/>
 				<Annotation Term="Common.Label" String="{@i18n&gt;companyCodeLabel}"/>
 			</Annotations>
 			<Annotations Target="Metadata.GeneralInfoType/SupplierNumber">
@@ -199,6 +200,9 @@
 			</Annotations>
 			<Annotations Target="Metadata.LineItemType/ItemNumber"/>
 			<Annotations Target="Metadata.LineItemType/CurrencyCode">
+				<Annotation Term="UI.Hidden" Bool="true"/>
+			</Annotations>
+			<Annotations Target="Metadata.GeneralInfoType/TaxCurrencyUnit">
 				<Annotation Term="UI.Hidden" Bool="true"/>
 			</Annotations>
 		</Schema>

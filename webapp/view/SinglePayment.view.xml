@@ -1,12 +1,14 @@
 <mvc:View controllerName="ee.com.finance.FI-112.controller.SinglePayment" height="100%" xmlns:form="sap.ui.layout.form"
 	xmlns:core="sap.ui.core" xmlns:u="sap.ui.unified" xmlns:mvc="sap.ui.core.mvc" xmlns="sap.m" xmlns:f="sap.f" xmlns:table="sap.ui.table"
 	xmlns:l="sap.ui.layout" xmlns:smartForm="sap.ui.comp.smartform" xmlns:smartField="sap.ui.comp.smartfield"
-	xmlns:smartTable="sap.ui.comp.smarttable">
+	xmlns:smartTable="sap.ui.comp.smarttable" xmlns:custom="ee.com.finance.FI-112.custom">
 	<NavContainer id="wizardNavContainer">
 		<pages>
 			<f:DynamicPage id="idDynamicPage" class="sapUiNoContentPadding" showFooter="true" fitContent="true">
 				<f:content>
 					<Wizard id="idWizard" class="sapUiResponsivePadding--header sapUiResponsivePadding--content">
+						<!--<WizardStep id="idGeneralInformation" title="{i18n>generalInformationTitle}" complete="onCompleteGeneralInfo"-->
+						<!--	activate="onActivateGeneralInfo" validated="false">-->
 						<WizardStep id="idGeneralInformation" title="{i18n>generalInformationTitle}" complete="onCompleteGeneralInfo">
 							<smartForm:SmartForm id="idGeneralInfo" editable="true">
 								<smartForm:layout>
@@ -14,10 +16,10 @@
 								</smartForm:layout>
 								<smartForm:Group>
 									<smartForm:GroupElement>
-										<smartField:SmartField value="{CompanyCode}"/>
+										<smartField:SmartField id="idCompanyCode" value="{CompanyCode}" change="onActivateGeneralInfo"/>
 									</smartForm:GroupElement>
 									<smartForm:GroupElement>
-										<smartField:SmartField value="{SupplierNumber}" change="onChangeGeneralInfo"/>
+										<smartField:SmartField id="idSupplierNumber" value="{SupplierNumber}" change="onChangeGeneralInfo"/>
 									</smartForm:GroupElement>
 									<smartForm:GroupElement>
 										<Button text="{i18n>oneTimeVendorLabel}" press="onPressOneTimeVendorDialog" enabled="{= ${wizardView>/isOneTimeVendorSelected}}"></Button>
@@ -33,25 +35,40 @@
 										<smartField:SmartField value="{AbnNumber}" mandatory="{= ${wizardView>/isAbnNumberMandatory}}"/>
 									</smartForm:GroupElement>
 									<smartForm:GroupElement>
-										<smartField:SmartField value="{ReferenceNumber}"/>
+										<smartField:SmartField value="{ReferenceNumber}" change="onActivateGeneralInfo"/>
 									</smartForm:GroupElement>
 									<smartForm:GroupElement>
-										<smartField:SmartField value="{DocumentDate}"/>
+										<smartField:SmartField value="{DocumentDate}" change="onActivateGeneralInfo"/>
 									</smartForm:GroupElement>
 									<smartForm:GroupElement>
-										<smartField:SmartField id="idGrossAmount" value="{GrossAmount}" change="._onChangeAmount"/>
+										<smartField:SmartField id="idGrossAmount" value="{GrossAmount}" change="._calculateLineItemBalance"/>
 									</smartForm:GroupElement>
+									<!--<smartForm:GroupElement>-->
+									<!--	<Label text="Tax Amount: "/>-->
+									<!--	<Input value="{TaxAmount}"/>-->
+									<!--</smartForm:GroupElement>-->
 									<smartForm:GroupElement>
-										<smartField:SmartField value="{TaxAmountIndicator}" change="onSelectAutoCalcTax"/>
+										<!--	<smartField:SmartField value="{TaxAmountIndicator}" change="onSelectAutoCalcTax"/>-->
+										<!--</smartForm:GroupElement>-->
+										<!--<smartForm:GroupElement>-->
+										<!--<HBox>-->
+										<!--		<Label text="Tax Amount: " textAlign="Begin" class="sapUiTinyMarginBegin"/>-->
+										<!--		<Text text="{TaxAmount}" enabled="{wizardView>/isEnabledAutoCalcTax}"/>-->
+										<!--</HBox>-->
+										<!--<InputListItem label="Tax Amount: "/>-->
+										<!--<Text text="{TaxAmount}" enabled="{wizardView>/isEnabledAutoCalcTax}"/>-->
+										<smartField:SmartField id="idTaxAmount" value="{TaxAmount}"/>
+										<!--<smartField:SmartField id="idTaxAmount" value="{TaxAmount}" editable="true" enabled="false"/>-->
 									</smartForm:GroupElement>
-									<smartForm:GroupElement>
-										<smartField:SmartField value="{TaxAmount}" visible="{wizardView>/isEnabledAutoCalcTax}"/>
-									</smartForm:GroupElement>
+									<!--<smartForm:GroupElement>-->
+									<!--	<Label text="Tax Amount: "/>-->
+									<!--	<Text text="{TaxAmount}"/>-->
+									<!--</smartForm:GroupElement>-->
 									<smartForm:GroupElement>
 										<smartField:SmartField value="{Description}"/>
 									</smartForm:GroupElement>
 									<smartForm:GroupElement>
-										<smartField:SmartField value="{RequesterID}"/>
+										<smartField:SmartField value="{RequesterID}" change="onActivateGeneralInfo"/>
 									</smartForm:GroupElement>
 									<smartForm:GroupElement>
 										<smartField:SmartField value="{CmIndicator}" change="onSelectCredit"/>
@@ -65,31 +82,40 @@
 								</smartForm:Group>
 							</smartForm:SmartForm>
 						</WizardStep>
-						<WizardStep id="idAccountingData" validated="true" title="{i18n>accountingDataTitle}">
+						<WizardStep id="idAccountingData" validated="false" title="{i18n>accountingDataTitle}">
+							<VBox class="sapUiMediumMarginBeginEnd sapUiTinyMarginTopBottom" id="idMessageStripVbox" visible="false"/>
 							<FlexBox alignItems="End" justifyContent="End">
-								<Label text="Line Item Balance: "/>
-								<Label text="{wizardView>/LineItemBalance}" />
-								<Label text="{wizardView>/CurrencyUnit}"/>
+								<ObjectStatus id="idStatus" text="{i18n>balanceLabel} {wizardView>/LineItemBalance} {wizardView>/CurrencyUnit}"/>
+								<!--<Label text="{i18n>balanceLabel}"/>-->
+								<!--<Label text="{wizardView>/LineItemBalance} {wizardView>/CurrencyUnit}"/>-->
+								<!--<Label text=" {wizardView>/CurrencyUnit}"/>-->
 							</FlexBox>
 							<smartTable:SmartTable id="idLineItemsSmartTable" entitySet="LineItem" smartFilterId="smartFilterBar" tableType="Table"
-								useExportToExcel="false" useVariantManagement="false" useTablePersonalisation="false" header="{i18n>lineItemsTitle}" showRowCount="true"
-								persistencyKey="SmartTableAnalytical_Explored" class="sapUiResponsiveContentPadding" editable="true" fieldChange="onFieldChange">
+								useExportToExcel="false" useVariantManagement="false" useTablePersonalisation="false" header="{i18n>lineItemsTitle}" showRowCount="false"
+								persistencyKey="SmartTableAnalytical_Explored" class="sapUiResponsiveContentPadding" editable="true" fieldChange="onFieldChange"
+								initialise="onSmartTableInitialise" height="30em" initiallyVisibleFields="CreditDebit">
 								<smartTable:customToolbar>
 									<OverflowToolbar design="Transparent">
 										<ToolbarSpacer/>
+										<Button text="{i18n>calculateTaxLabel}" press="onPressCalculateTax" type="Transparent"/>
+										<!--<Button icon="sap-icon://simulate" type="Transparent"/>-->
+										<Button text="{i18n>deleteLabel}" press="onPressDelete" type="Transparent"/>
 										<Button icon="sap-icon://add" press="onPressAdd" type="Transparent"/>
 										<Button icon="sap-icon://complete" press="onPressValidate" type="Transparent"/>
-										<!--<Button icon="sap-icon://upload" press="onPressUpload" type="Transparent"/>-->
 										<u:FileUploader id="FileUploaderId" sameFilenameAllowed="true" iconOnly="true" buttonOnly="true" fileType="XLSX,xlsx,CSV,csv,xls"
 											icon="sap-icon://upload" style="Transparent" change="onUpload"/>
 									</OverflowToolbar>
 								</smartTable:customToolbar>
-								<Table mode="Delete" delete="onDelete" id="idAccountingDataTable"></Table>
+								<table:Table>
+									<!--<table:rowSettingsTemplate>-->
+									<!--	<table:RowSettings highlight="{tableView>/CID}"/>-->
+									<!--</table:rowSettingsTemplate>-->
+								</table:Table>
 							</smartTable:SmartTable>
 						</WizardStep>
 						<WizardStep title="{i18n>supportingDocumentTitle}" validated="false">
-							<UploadCollection id="idUploadSupportingDocument" mode="SingleSelectLeft" beforeUploadStarts="onBeforeUploadStarts"
-								fileDeleted="onPressFileDeleted" uploadComplete="onUploadComplete" class="sapUiResponsiveMargin" change="onChange" instantUpload="false">
+							<UploadCollection id="idUploadSupportingDocument" mode="SingleSelectLeft" fileDeleted="onPressFileDeleted" class="sapUiResponsiveMargin"
+								change="onChange" instantUpload="false" uploadComplete="onUploadComplete" beforeUploadStarts="onBeforeUploadStarts" noDataText="{i18n>uploadLabel}" noDataDescription="{i18n>setPrimaryDescriptionLabel}" >
 								<toolbar>
 									<OverflowToolbar id="myId">
 										<Title id="attachmentTitle"/>
@@ -98,16 +124,21 @@
 										<UploadCollectionToolbarPlaceholder/>
 									</OverflowToolbar>
 								</toolbar>
+								<!--<items>-->
+								<!--	<UploadCollectionItem deletePress="onPressFileDeleted" fileName="{FilePath}"></UploadCollectionItem>-->
+								<!--</items>-->
 							</UploadCollection>
 						</WizardStep>
 					</Wizard>
 				</f:content>
 				<f:footer>
 					<OverflowToolbar>
+						<Button id="idMessageBtn" icon="sap-icon://alert" text="{= ${messages>/}.length}" type="Emphasized" visible="{= ${messages>/}.length > 0}"
+							press="onPressMessagePopover"/>
 						<ToolbarSpacer/>
 						<!--<Button text="{i18n>Submit}" type="Emphasized" enabled="{= ${/submitButtonEnabled}==='true'}"/>-->
-						<Button text="{i18n>Submit}" type="Emphasized" press=".onPressSubmit"/>
-						<Button text="{i18n>Cancel}" type="Transparent" press="handleWizardCancel"/>
+						<Button id="idSubmitButton" visible="false" text="{i18n>submitLabel}" type="Emphasized" press=".onPressSubmit"/>
+						<Button text="{i18n>cancelLabel}" type="Transparent" press=".onPressCancel"/>
 					</OverflowToolbar>
 				</f:footer>
 			</f:DynamicPage>

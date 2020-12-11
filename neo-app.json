@@ -40,7 +40,7 @@
       "path": "/sap/opu/odata",
       "target": {
         "type": "destination",
-        "name": "S4H",
+        "name": "SD1_200",
         "entryPath": "/sap/opu/odata"
       },
       "description": "EE"

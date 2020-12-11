@@ -5,18 +5,19 @@ sap.ui.define([
 	"sap/ui/model/Filter",
 	"sap/ui/model/FilterOperator",
 	"sap/m/UploadCollectionItem",
-	"sap/m/UploadCollection",
+	"sap/m/UploadCollectionParameter",
 	"sap/ui/core/Fragment",
 	"sap/m/ColumnListItem",
 	"sap/ui/comp/smartfield/SmartField",
 	"../util/FormValidator",
 	"sap/m/ObjectStatus",
 	"sap/m/MessageBox",
+	"sap/m/MessageStrip",
 	"../util/xlsx"
 
-], function (BaseController, JSONModel, formatter, Filter, FilterOperator, UploadCollectionItem, UploadCollection, Fragment,
+], function (BaseController, JSONModel, formatter, Filter, FilterOperator, UploadCollectionItem, UploadCollectionParameter, Fragment,
 	ColumnListItem,
-	SmartField, FormValidator, ObjectStatus, MessageBox, xlsx) {
+	SmartField, FormValidator, ObjectStatus, MessageBox, MessageStrip, xlsx) {
 	"use strict";
 
 	return BaseController.extend("ee.com.finance.FI-112.controller.Worklist", {
@@ -35,7 +36,7 @@ sap.ui.define([
 			var oViewModel = new JSONModel({
 				Title: "",
 				Text: "",
-				isEnabledAutoCalcTax: false,
+				isEnabledAutoCalcTax: true,
 				isEnabledCredit: false,
 				isNameSelected: false,
 				isOneTimeVendorSelected: true,
@@ -45,26 +46,33 @@ sap.ui.define([
 				BinaryFile: "",
 				LineItemBalance: 0,
 				CurrencyUnit: "",
-				PrimaryIndicator: "",
-				CreditDebit: "S"
+				CreditDebit: "S",
+				Path: ""
 			});
 			this.getView().setModel(oViewModel, "wizardView");
 
-			var oModel = new JSONModel([]);
-			this.getView().setModel(oModel, "tableView");
+			var tableView = new JSONModel([]);
+			this.getView().setModel(tableView, "tableView");
 
-			var generalInfoModel = new JSONModel([]);
-			this.getView().setModel(generalInfoModel, "generalInfoView");
+			var tableModel = new JSONModel([]);
+			this.getView().setModel(tableModel, "tableModel");
+
+			var documentView = new JSONModel([]);
+			this.getView().setModel(documentView, "documentView");
 
 			this._aLineItems = [];
+			// this._aErrors = [];
 			this.getRouter().getRoute("singlePayment").attachPatternMatched(this._onObjectMatched, this);
 
 			this._oFormValidator = new FormValidator(this.getResourceBundle());
-			// var oUploadCollection = this.getView().byId('idUploadSupportingDocument');
-			// oUploadCollection.setUploadUrl("/sap/opu/odata/sap/ZUI_FIN_VIMMANUALPAYMENT/Document");
 
-			// this.oDataModel = new sap.ui.model.odata.ODataModel("https://s4spt.eeaus.com:44301/sap/opu/odata/sap/ZUI_FIN_VIMMANUALPAYMENT/");
-			// global XLSX;
+			this.getView().setModel(this.getMessageManager().getMessageModel(), "messages");
+
+			// this.byId("idUploadSupportingDocument").addEventDelegate({
+			// 	fileDeleted: function (evt) {
+			// 		return;
+			// 	}
+			// });
 		},
 
 		/* =========================================================== */
@@ -127,6 +135,11 @@ sap.ui.define([
 			}
 		},
 
+		onPressCancelOneTimeVendor: function (oEvent) {
+			var oDialog = oEvent.getSource();
+			oDialog.getParent().close();
+		},
+
 		/**
 		 * Event handler for the press event of cancel button for any dialog.
 		 * Used to close the currently opened dialog.
@@ -134,8 +147,29 @@ sap.ui.define([
 		 * @public
 		 */
 		onPressCancel: function (oEvent) {
-			var oDialog = oEvent.getSource();
-			oDialog.getParent().close();
+			// var oDialog = oEvent.getSource();
+			// oDialog.getParent().close();
+			var sCancelTitle = this.getResourceBundle().getText("cancelTitle"),
+				sConfirmationMessage = this.getResourceBundle().getText("cancelMessage");
+
+			if (this.getModel().hasPendingChanges()) {
+				MessageBox.warning(sConfirmationMessage, {
+					title: sCancelTitle,
+					actions: [MessageBox.Action.OK, MessageBox.Action.CANCEL],
+					onClose: function (sAction) {
+						if (sAction === MessageBox.Action.OK) {
+							this._oFormValidator.clearValidation(this.getView());
+							this.getModel().resetChanges();
+							this.getModel().refresh();
+							window.history.go(-1);
+						}
+					}.bind(this)
+				});
+			} else {
+				// Remove any validation performed to clear the state of a control.
+				this._oFormValidator.clearValidation(this.getView());
+			}
+			this.clearMessages();
 		},
 
 		onChangeGeneralInfo: function (oEvent) {
@@ -154,18 +188,88 @@ sap.ui.define([
 				oViewModel.setProperty("/isAbnNumberMandatory", false);
 				this.getView().getModel().setProperty(oContext.sPath + "/AbnNumber", "");
 			}
-
+			// this.onActivateGeneralInfo();
 		},
 
-		/**
-		 * Event handler for the press event of add button.
-		 * Used to add 5 line items in the table.
-		 * @public
-		 */
-		onPressAdd: function () {
-			// var oTable = this.byId("idLineItemsSmartTable").getTable(),
-			// 	oAccountingModel = this.getView().getModel("tableView"),
-			// 	aExistingEntries = oAccountingModel.getData();
+		onSmartTableInitialise: function (oEvent) {
+			var oTable = oEvent.getSource().getTable();
+			var aColumns = oTable.getColumns();
+
+			for (var i = 0; i < aColumns.length; i++) {
+				var sPath = "tableView>" + aColumns[i].data("p13nData").columnKey;
+				aColumns[i].getTemplate().bindValue(sPath);
+
+				if (aColumns[i].data("p13nData").columnKey === "ItemNumber") {
+					aColumns[i].getTemplate().setEditable(false);
+					aColumns[i].setWidth("5rem");
+				}
+
+				if (aColumns[i].data("p13nData").columnKey === "Description") {
+					aColumns[i].getTemplate().attachChange(this._onChangeDescription, this);
+					aColumns[i].setWidth("30.6rem");
+				}
+
+				if (aColumns[i].data("p13nData").columnKey === "Amount") {
+					aColumns[i].getTemplate().attachChange(this._onChangeAmount, this);
+					aColumns[i].setWidth("8rem");
+				}
+
+				var oItemTemplate = new sap.ui.core.Item({
+					key: "{CreditDebit}",
+					text: "{Description}"
+				});
+
+				var oObject = new sap.m.ComboBox({
+					selectedKey: "{tableView>CreditDebit}",
+					items: {
+						path: "/ZB_FIN_VH_CreditDebit", //***no curly brackets round a variable here***
+						template: oItemTemplate,
+						templateShareable: true
+					},
+					change: this._onChangeCreditDebit.bind(this)
+				});
+				if (aColumns[i].data("p13nData").columnKey === "CreditDebit") {
+					aColumns[i].setTemplate(oObject.clone());
+					aColumns[i].setWidth("7rem");
+				}
+
+				if (aColumns[i].data("p13nData").columnKey === "TaxCode") {
+					aColumns[i].getTemplate().attachChange(this._onChangeTaxCode, this);
+					aColumns[i].setWidth("8rem");
+				}
+
+				if (aColumns[i].data("p13nData").columnKey === "CompanyCode") {
+					aColumns[i].getTemplate().attachChange(this._onChangCompanyCode, this);
+					aColumns[i].setWidth("8rem");
+				}
+
+				if (aColumns[i].data("p13nData").columnKey === "GlAccount") {
+					aColumns[i].getTemplate().attachChange(this._onChangeGlAccount, this);
+					aColumns[i].setWidth("10rem");
+				}
+
+				if (aColumns[i].data("p13nData").columnKey === "CostCenter") {
+					aColumns[i].getTemplate().attachChange(this._onChangeCostCenter, this);
+					aColumns[i].setWidth("10rem");
+				}
+
+				if (aColumns[i].data("p13nData").columnKey === "ProfitCenter") {
+					aColumns[i].getTemplate().attachChange(this._onChangeProfitCenter, this);
+					aColumns[i].setWidth("8rem");
+				}
+
+				if (aColumns[i].data("p13nData").columnKey === "WbsElement") {
+					aColumns[i].getTemplate().attachChange(this._onChangeWbsElement, this);
+					aColumns[i].setWidth("15rem");
+				}
+
+			}
+
+			oTable.bindRows("tableView>/");
+		},
+
+		_create5LineItems: function () {
+			var oTable = this.byId("idLineItemsSmartTable").getTable();
 
 			for (var i = 0; i < 5; i++) {
 				var oProperties = {
@@ -179,70 +283,48 @@ sap.ui.define([
 					GlAccount: "",
 					CostCenter: "",
 					ProfitCenter: "",
-					WbsElement: ""
+					WbsElement: "",
+					CID: "None"
 				};
 
 				this._createLineItem(oProperties);
 
-				// var sItemNumber = (aExistingEntries.length + 1).toString();
-				// var oEntry = this.getModel().createEntry("LineItem", {
-				// 	properties: {
-				// 		"BatchID": this._getUUID(),
-				// 		"ItemNumber": "0",
-				// 		"Description": "",
-				// 		"Amount": 0.00,
-				// 		"CreditDebit": this.getView().getModel("wizardView").getProperty("/CreditDebit"),
-				// 		"TaxCode": "",
-				// 		"CompanyCode": "",
-				// 		"GlAccount": "",
-				// 		"CostCenter": "",
-				// 		"ProfitCenter": "",
-				// 		"WbsElement": ""
-				// 	} || {}
-				// });
-				// var oColumnListItem = new ColumnListItem({
-				// 	cells: oTable.getColumns().map(function (oColumn) {
-
-				// 		if (oColumn.getCustomData()[0].getValue().columnKey === "ItemNumber") {
-				// 			return new SmartField({
-				// 				value: "{" + oColumn.getCustomData()[0].getValue().columnKey + "}",
-				// 				editable: false
-				// 			});
-				// 		} else if (oColumn.getCustomData()[0].getValue().columnKey === "Amount") {
-				// 			return new SmartField({
-				// 				value: "{" + oColumn.getCustomData()[0].getValue().columnKey + "}",
-				// 				change: [function (oEvent) {
-				// 					this._onChangeAmount(oEvent);
-				// 				}, this]
-				// 			});
-				// 		} else {
-				// 			return new SmartField({
-				// 				value: "{" + oColumn.getCustomData()[0].getValue().columnKey + "}"
-				// 					// change: [this._onChangeAmount,this]
-				// 			});
-				// 		}
-
-				// 	}.bind(this))
-				// });
-
-			
-			
-				// oColumnListItem.setBindingContext(oEntry);
-				// oTable.addItem(oColumnListItem);
-				// aExistingEntries.push(oColumnListItem.getBindingContext().getProperty());
 			}
+			oTable.bindRows({
+				path: "tableView>/"
+			});
 
 			this._updateItemNumber();
 		},
 
+		/**
+		 * Event handler for the press event of add button.
+		 * Used to add 5 line items in the table.
+		 * @public
+		 */
+		onPressAdd: function () {
+			this._create5LineItems();
+		},
+
 		_updateItemNumber: function () {
-			var aLineItems = this.byId("idAccountingDataTable").getItems(),
+			var aLineItems = this.getModel("tableView").getData(),
+				aModels = this.getModel("tableModel").getData(),
 				iItemNumber = 1;
 
 			aLineItems.forEach(function (oLineItem) {
-				var sPath = oLineItem.getBindingContextPath();
+				// var sPath = oLineItem.sPath;
+				// this.getModel().setProperty(sPath +"/ItemNumber", iItemNumber.toString());
+				// oLineItem.getProperty().ItemNumber = iItemNumber.toString();
+				oLineItem.ItemNumber = iItemNumber.toString();
+				iItemNumber++;
+			}.bind(this));
 
-				this.getView().getModel().setProperty(sPath + "/ItemNumber", iItemNumber.toString());
+			iItemNumber = 1;
+
+			aModels.forEach(function (oModel) {
+				var sPath = oModel.sPath;
+
+				this.getModel().setProperty(sPath + "/ItemNumber", iItemNumber.toString());
 				iItemNumber++;
 			}.bind(this));
 		},
@@ -250,87 +332,403 @@ sap.ui.define([
 		_createLineItem: function (oProperties) {
 			var oTable = this.byId("idLineItemsSmartTable").getTable(),
 				oAccountingModel = this.getView().getModel("tableView"),
-				aExistingEntries = oAccountingModel.getData();
+				aExistingEntries = oAccountingModel.getData(),
+				aExistingModel = this.getModel("tableModel").getData()
+
 			var oEntry = this.getModel().createEntry("LineItem", {
+				groupId: "Changes",
 				properties: oProperties
 			} || {});
 
-			var oColumnListItem = new ColumnListItem({
-				cells: oTable.getColumns().map(function (oColumn) {
+			aExistingModel.push(oEntry);
+			aExistingEntries.push(oEntry.getProperty());
 
-					if (oColumn.getCustomData()[0].getValue().columnKey === "ItemNumber") {
-						return new SmartField({
-							value: "{" + oColumn.getCustomData()[0].getValue().columnKey + "}",
-							editable: false
-						});
-					} else if (oColumn.getCustomData()[0].getValue().columnKey === "Amount") {
-						return new SmartField({
-							value: "{" + oColumn.getCustomData()[0].getValue().columnKey + "}",
-							change: [function (oEvent) {
-								this._onChangeAmount(oEvent);
-							}, this]
-						});
-					} else {
-						return new SmartField({
-							value: "{" + oColumn.getCustomData()[0].getValue().columnKey + "}"
-								// change: [this._onChangeAmount,this]
-						});
-					}
+			// var oColumnListItem = new ColumnListItem({
+			// 	cells: oTable.getColumns().map(function (oColumn) {
 
-				}.bind(this))
-			});
+			// 		if (oColumn.getCustomData()[0].getValue().columnKey === "ItemNumber") {
+			// 			return new SmartField({
+			// 				value: "{" + oColumn.getCustomData()[0].getValue().columnKey + "}",
+			// 				editable: false
+			// 			});
+			// 		} else if (oColumn.getCustomData()[0].getValue().columnKey === "Amount") {
+			// 			return new SmartField({
+			// 				value: "{" + oColumn.getCustomData()[0].getValue().columnKey + "}",
+			// 				change: [function (oEvent) {
+			// 					this._onChangeAmount(oEvent);
+			// 				}, this]
+			// 			});
+			// 		} else {
+			// 			return new SmartField({
+			// 				value: "{" + oColumn.getCustomData()[0].getValue().columnKey + "}"
+			// 					// change: [this._onChangeAmount,this]
+			// 			});
+			// 		}
 
-			oColumnListItem.setBindingContext(oEntry);
-			oTable.addItem(oColumnListItem);
-			aExistingEntries.push(oColumnListItem.getBindingContext().getProperty());
+			// 	}.bind(this))
+			// });
+
+			// oColumnListItem.setBindingContext(oEntry);
+			// oTable.addItem(oColumnListItem);
+			// aExistingEntries.push(oColumnListItem.getBindingContext().getProperty());
 
 		},
-		_onChangeAmount: function (oEvent) {
-			var aLineItems = this.byId("idAccountingDataTable").getItems(),
+
+		onPressCalculateTax: function (oEvent) {
+			var oAccountingModel = this.getView().getModel("tableView"),
+				aExistingEntries = oAccountingModel.getData();
+			var oTable = this.byId("idLineItemsSmartTable").getTable();
+			var sPath = oEvent.getSource().getBindingContext().sPath
+			var sGrossAmount = this.byId("idGrossAmount").getValue().replace(",", "");
+
+			var aDeferredGroup = this.getModel().getDeferredGroups().push("batchCalculateTax");
+			this.getModel().setDeferredGroups(aDeferredGroup);
+			var mParameters = {
+				changedSetId: "batchCalculateTax"
+			};
+
+			this.getModel("wizardView").setProperty("/Path", sPath);
+
+			// if (this.getModel().hasPendingChanges()) {
+			aExistingEntries.forEach(function (oExistingEntry) {
+				oExistingEntry.HDRSupplierNumber = this.byId("idSupplierNumber").getValue();
+				oExistingEntry.HDRCompanyCode = this.byId("idCompanyCode").getValue();
+				oExistingEntry.HDRGrossAmount = sGrossAmount;
+				oExistingEntry.CalcTaxAmount = "X";
+				this.getModel().create('/LineItem', oExistingEntry, {
+					changeSetId: "batchCalculateTax",
+					success: function (oData, response) {
+						var oMessage = response.headers["sap-message"];
+						if (oMessage) {
+							this.clearMessages();
+							var oMessageObject = JSON.parse(oMessage);
+							var sTax = oMessageObject.message;
+							this.byId("idTaxAmount").setValue(sTax.split(",")[0]);
+							// var sPath = this.getModel("wizardView").getProperty("/Path");
+
+							// this.getModel().setProperty(sPath + "/TaxAmount", sTax.replace(",", ""));
+							sap.m.MessageToast.show("Success!");
+							// MessageToast.show(this.getResourceBundle().getText("successDeleteMessage"));
+							// this.getModel("objectView").setProperty("/isObjectDeleted", true);
+							// this.getModel().refresh();
+							// this.onNavBack();
+							oExistingEntry.CalcTaxAmount = "";
+						}
+
+					}.bind(this),
+					error: function (oError) {
+						this.getOwnerComponent().preventDefaultErrorHandler();
+						oExistingEntry.CalcTaxAmount = "";
+						oTable.unbindRows();
+						oTable.bindRows({
+							path: "tableView>/"
+						});
+
+					}.bind(this)
+				});
+
+			}.bind(this));
+		},
+
+		_calculateLineItemBalance: function () {
+			var oAccountingModel = this.getView().getModel("tableView"),
+				aExistingEntries = oAccountingModel.getData(),
 				iTotalAmount = 0,
-				iGrossAmount = parseFloat(this.byId("idGrossAmount").getValue()),
+				iGrossAmount = parseFloat(this.byId("idGrossAmount").getValue().replace(",", "")),
 				sCurrencyUnit = this.byId("idGrossAmount").getContent().getItems()[1].getValue();
 
-			aLineItems.forEach(function (oLineItem) {
-				var oExistedLineItem = oLineItem.getBindingContext().getObject();
-				var sPath = oLineItem.getBindingContextPath();
-				var oSelectedLineItem = oEvent.getSource().getBindingContext().getObject();
+			if (isNaN(iGrossAmount)) {
+				iGrossAmount = 0;
+			}
 
-				if (oExistedLineItem.BatchID === oSelectedLineItem.BatchID) {
-					this.getView().getModel().setProperty(sPath + "/Amount", oEvent.getParameters().newValue);
-					iTotalAmount +=  parseFloat(this.getModel().getProperty(sPath + "/Amount"));
-				} else {
-					iTotalAmount += parseFloat(oExistedLineItem.Amount);
-				}
+			aExistingEntries.forEach(function (oExistingEntry) {
+				iTotalAmount += parseFloat(oExistingEntry.Amount);
 			}.bind(this));
+
+			this.getModel("wizardView").bindProperty("/LineItemBalance").attachChange(this._onChangeStatus, this);
 
 			this.getModel("wizardView").setProperty("/LineItemBalance", (iGrossAmount - iTotalAmount).toFixed(2));
 			this.getModel("wizardView").setProperty("/CurrencyUnit", sCurrencyUnit);
 
+			// (function (event) {
+			// button.setEnabled(event.getSource().getValue().length < 10);
+			// })
+		},
+
+		_onChangeStatus: function (oEvent) {
+			var oMessageStripVbox = this.byId("idMessageStripVbox");
+
+			if (this.getModel("wizardView").getProperty("/LineItemBalance") !== "0.00") {
+				this.byId("idAccountingData").setValidated(false);
+				this.byId("idStatus").setState("Error");
+				oMessageStripVbox.setVisible(true);
+				var oMessageStrip = sap.ui.getCore().byId("idMsgStrip");
+
+				if (oMessageStrip) {
+					oMessageStrip.setVisible(true);
+				} else {
+					oMessageStrip = new MessageStrip("idMsgStrip", {
+						showCloseButton: true,
+						showIcon: true,
+						text: this.getResourceBundle().getText("errorBalanceMessage"),
+						type: "Error"
+					});
+
+					oMessageStripVbox.addItem(oMessageStrip);
+				}
+			} else {
+				this.byId("idAccountingData").setValidated(true);
+				this.byId("idStatus").setState("None");
+				oMessageStripVbox.setVisible(false);
+
+			}
+		},
+		///////////CHANGE METHOD//////////////////////////////////////////////////////////
+
+		_onChangeAmount: function (oEvent) {
+			var sPath = oEvent.getSource().getBindingInfo("value").binding.oContext.sPath,
+				sIndex = sPath.replace("/", ""),
+				sItemPath = this.getModel("tableModel").getData()[sIndex].sPath;
+
+			this.getModel().setProperty(sPath + "/Amount", oEvent.getParameters().newValue);
+			// oAccountingModel = this.getView().getModel("tableView"),
+			// aExistingEntries = oAccountingModel.getData();
+
+			// var aLineItems = this.byId("idAccountingDataTable").getItems(),
+			// iTotalAmount = 0,
+			// iGrossAmount = parseFloat(this.byId("idGrossAmount").getValue()),
+			// sCurrencyUnit = this.byId("idGrossAmount").getContent().getItems()[1].getValue();
+
+			// aLineItems.forEach(function (oLineItem) {
+			// 	var oExistedLineItem = oLineItem.getBindingContext().getObject();
+			// 	var sPath = oLineItem.getBindingContextPath();
+			// 	var oSelectedLineItem = oEvent.getSource().getBindingContext().getObject();
+
+			// 	if (oExistedLineItem.BatchID === oSelectedLineItem.BatchID) {
+			// 		this.getView().getModel().setProperty(sPath + "/Amount", oEvent.getParameters().newValue);
+			// 		iTotalAmount += parseFloat(this.getModel().getProperty(sPath + "/Amount"));
+			// 	} else {
+			// 		iTotalAmount += parseFloat(oExistedLineItem.Amount);
+			// 	}
+			// }.bind(this));
+			this._calculateLineItemBalance();
+
+			// this.getModel("wizardView").setProperty("/LineItemBalance", (iGrossAmount - iTotalAmount).toFixed(2));
+			// this.getModel("wizardView").setProperty("/CurrencyUnit", sCurrencyUnit);
+
 			// sap.m.MessageToast.show(iTotalAmount);
 		},
+
+		_onChangeDescription: function (oEvent) {
+			var sPath = oEvent.getSource().getBindingInfo("value").binding.oContext.sPath,
+				sIndex = sPath.replace("/", ""),
+				sItemPath = this.getModel("tableModel").getData()[sIndex].sPath;
+
+			this.getModel().setProperty(sPath + "/Description", oEvent.getParameters().newValue);
+
+		},
+		_onChangeCreditDebit: function (oEvent) {
+			var sPath = oEvent.getSource().getBindingInfo("selectedKey").binding.oContext.sPath,
+				sIndex = sPath.replace("/", ""),
+				sItemPath = this.getModel("tableModel").getData()[sIndex].sPath;
+
+			this.getModel().setProperty(sPath + "/CreditDebit", oEvent.getSource().getSelectedItem().getKey());
+		},
+		_onChangeTaxCode: function (oEvent) {
+			var sPath = oEvent.getSource().getBindingInfo("value").binding.oContext.sPath,
+				sIndex = sPath.replace("/", ""),
+				sItemPath = this.getModel("tableModel").getData()[sIndex].sPath;
+
+			this.getModel().setProperty(sPath + "/Description", oEvent.getParameters().value);
+		},
+		_onChangeCompanyCode: function (oEvent) {
+			var sPath = oEvent.getSource().getBindingInfo("value").binding.oContext.sPath,
+				sIndex = sPath.replace("/", ""),
+				sItemPath = this.getModel("tableModel").getData()[sIndex].sPath;
+
+			this.getModel().setProperty(sPath + "/CompanyCode", oEvent.getParameters().value);
+		},
+		_onChangeGlAccount: function (oEvent) {
+			var sPath = oEvent.getSource().getBindingInfo("value").binding.oContext.sPath,
+				sIndex = sPath.replace("/", ""),
+				sItemPath = this.getModel("tableModel").getData()[sIndex].sPath;
+
+			this.getModel().setProperty(sPath + "/GlAccount", oEvent.getParameters().value);
+		},
+		_onChangeCostCenter: function (oEvent) {
+			var sPath = oEvent.getSource().getBindingInfo("value").binding.oContext.sPath,
+				sIndex = sPath.replace("/", ""),
+				sItemPath = this.getModel("tableModel").getData()[sIndex].sPath;
+
+			this.getModel().setProperty(sPath + "/CostCenter", oEvent.getParameters().value);
+		},
+		_onChangeProfitCenter: function (oEvent) {
+			var sPath = oEvent.getSource().getBindingInfo("value").binding.oContext.sPath,
+				sIndex = sPath.replace("/", ""),
+				sItemPath = this.getModel("tableModel").getData()[sIndex].sPath;
+
+			this.getModel().setProperty(sPath + "/ProfitCenter", oEvent.getParameters().value);
+		},
+		_onChangeWbsElement: function (oEvent) {
+			var sPath = oEvent.getSource().getBindingInfo("value").binding.oContext.sPath,
+				sIndex = sPath.replace("/", ""),
+				sItemPath = this.getModel("tableModel").getData()[sIndex].sPath;
+
+			this.getModel().setProperty(sPath + "/WbsElement", oEvent.getParameters().value);
+		},
 		onPressValidate: function () {
-			var aLineItems = this.byId("idAccountingDataTable").getItems();
+			var oAccountingModel = this.getView().getModel("tableView"),
+				aExistingEntries = oAccountingModel.getData();
+			var oTable = this.byId("idLineItemsSmartTable").getTable();
+			var sGrossAmount = this.byId("idGrossAmount").getValue().replace(",", "");
+
 			var aDeferredGroup = this.getModel().getDeferredGroups().push("batchCreate");
 			this.getModel().setDeferredGroups(aDeferredGroup);
 			var mParameters = {
 				groupId: "batchCreate"
 			};
-			if (this.getModel().hasPendingChanges()) {
 
-				aLineItems.forEach(function (oLineItem) {
-					var sPath = oLineItem.getBindingContextPath();
-					var oData = this.getView().getModel().getProperty(sPath);
-					this.getView().getModel().getProperty(sPath).ValidationFlag = "X"
-					this.getModel().create('/LineItem', oData, mParameters);
-				}.bind(this));
-				// this._updateLineItems(this._aExistingEntries);
-				// for (var i = 0; i < this._aExistingEntries.length; i++) {
-				// 	this.getView().getModel("tableView").getData()[i].ValidationFlag = "X";
-				// 	var oEntry = this.getView().getModel("tableView").getData()[i];
+			// aExistingEntries.forEach(function (oExistingEntry) {
+			for (var i = 0; i < aExistingEntries.length; i++) {
+				oExistingEntry.HDRSupplierNumber = this.byId("idSupplierNumber").getValue();
+				oExistingEntry.HDRCompanyCode = this.byId("idCompanyCode").getValue();
+				oExistingEntry.HDRGrossAmount = sGrossAmount;
+				// this.getModel().create('/LineItem', oExistingEntry, mParameters);
 
-				// }
+				this.getModel().create('/LineItem', oExistingEntry, {
+					changeSetId: "batchCreate",
+					success: function () {
+						sap.m.MessageToast.show("Success!");
+						aExistingEntries.forEach(function (oExistingEntry) {
+
+							oExistingEntry.CID = "None"
+							var rowSettingsTemplate = new sap.ui.table.RowSettings({
+								highlight: "{tableView>CID}"
+							});
+							oTable.setRowSettingsTemplate(rowSettingsTemplate);
+
+						}.bind(this));
+
+					}.bind(this),
+					error: function (oError) {
+						this.getOwnerComponent().preventDefaultErrorHandler();
+						if (i == aExistingEntries.length) {
+							var oErrorResponse = JSON.parse(oError.responseText),
+								oErrorMessage = "";
+							this._aErrors = [];
+
+							var aErrorDetails = oErrorResponse.error.innererror.errordetails;
+							for (var i = 0; i < aErrorDetails.length; i++) {
+								oErrorMessage = aErrorDetails[i].message;
+								this._aErrors.push(oErrorMessage);
+							}
+
+							var aErrors = this._aErrors;
+
+							for (var i = 0; i < aErrors.length; i++) {
+								if (/(?<=\D)\d+/.test(aErrors[i])) {
+									var sItemNumber = (/(?<=\D)\d+/.exec(aErrors[i])),
+										sUpdateItemNumber = sItemNumber[0];
+
+									aExistingEntries.forEach(function (oExistingEntry) {
+										if (oExistingEntry.ItemNumber == sUpdateItemNumber) {
+											oExistingEntry.CID = "Error"
+											var rowSettingsTemplate = new sap.ui.table.RowSettings({
+												highlight: "{tableView>CID}"
+											});
+
+											oTable.setRowSettingsTemplate(rowSettingsTemplate);
+										}
+									}.bind(this));
+								}
+							}
+						}
+						else{
+							this.clearMessages();
+						}
+
+					}.bind(this)
+				});
 			}
+
+			// }.bind(this));
+
+			// this.getModel().submitChanges({
+			// 	groupId: "batchCreate",
+			// 	success: function () {
+			// 		sap.m.MessageToast.show("Success!");
+			// 		aExistingEntries.forEach(function (oExistingEntry) {
+
+			// 			oExistingEntry.CID = "None"
+			// 			var rowSettingsTemplate = new sap.ui.table.RowSettings({
+			// 				highlight: "{tableView>CID}"
+			// 			});
+			// 			oTable.setRowSettingsTemplate(rowSettingsTemplate);
+
+			// 		}.bind(this));
+
+			// 	}.bind(this),
+			// 	error: function (oError) {
+			// 		this.getOwnerComponent().preventDefaultErrorHandler();
+
+			// 		var oErrorResponse = JSON.parse(oError.responseText),
+			// 			oErrorMessage = "";
+			// 		this._aErrors = [];
+
+			// 		var aErrorDetails = oErrorResponse.error.innererror.errordetails;
+			// 		for (var i = 0; i < aErrorDetails.length; i++) {
+			// 			oErrorMessage = aErrorDetails[i].message;
+			// 			this._aErrors.push(oErrorMessage);
+			// 		}
+
+			// 		var aErrors = this._aErrors;
+
+			// 		for (var i = 0; i < aErrors.length; i++) {
+			// 			if (/(?<=\D)\d+/.test(aErrors[i])) {
+			// 				var sItemNumber = (/(?<=\D)\d+/.exec(aErrors[i])),
+			// 					sUpdateItemNumber = sItemNumber[0];
+
+			// 				aExistingEntries.forEach(function (oExistingEntry) {
+			// 					if (oExistingEntry.ItemNumber == sUpdateItemNumber) {
+			// 						oExistingEntry.CID = "Error"
+			// 						var rowSettingsTemplate = new sap.ui.table.RowSettings({
+			// 							highlight: "{tableView>CID}"
+			// 						});
+
+			// 						oTable.setRowSettingsTemplate(rowSettingsTemplate);
+			// 					}
+			// 				}.bind(this));
+
+			// 			}
+			// 		}
+			// 	}.bind(this)
+			// });
+			oTable.unbindRows();
+			oTable.bindRows({
+				path: "tableView>/"
+			});
+			// }.bind(this));
+
+			// this.getModel().submitChanges({
+			// 	groupId: "validate"
+			// })
+
+			// aLineItems.forEach(function (oLineItem) {
+			// 	var sPath = oLineItem.getBindingContextPath();
+			// 	var oData = this.getView().getModel().getProperty(sPath);
+			// 	this.getView().getModel().getProperty(sPath).ValidationFlag = "X"
+			// 	this.getModel().create('/LineItem', oData, mParameters);
+			// }.bind(this));
+
+			// this._updateLineItems(this._aExistingEntries);
+			// for (var i = 0; i < this._aExistingEntries.length; i++) {
+			// 	this.getView().getModel("tableView").getData()[i].ValidationFlag = "X";
+			// 	var oEntry = this.getView().getModel("tableView").getData()[i];
+
+			// }
+
+			// }
+
 		},
 
 		onUpload: function (oEvent) {
@@ -362,8 +760,11 @@ sap.ui.define([
 							oProperties.ItemNumber = "0";
 							var oEntry = that._createLineItem(oProperties);
 						});
+						that._calculateLineItemBalance();
+						oTable.bindRows({
+							path: "tableView>/"
+						});
 						that._updateItemNumber();
-
 					});
 				};
 				reader.onerror = function (ex) {
@@ -373,33 +774,48 @@ sap.ui.define([
 			}
 		},
 
-		onDelete: function (oEvent) {
-			var oLineItem = oEvent.getParameter("listItem").getBindingContext();
+		onPressDelete: function (oEvent) {
+			var oTable = this.byId("idLineItemsSmartTable").getTable(),
+				oAccountingModel = this.getView().getModel("tableView"),
+				aExistingEntries = oAccountingModel.getData(),
+				aExistingModel = this.getModel("tableModel").getData(),
+				reverse = [].concat(oTable.getSelectedIndices()).reverse();
 
-			this.getModel().deleteCreatedEntry(oLineItem);
-			oEvent.getParameter("listItem").getBindingContextPath();
-			oEvent.getSource().removeItem(oEvent.getParameter("listItem"));
-			this._onChangeAmount(oEvent);
-			this._updateItemNumber();
-
+			MessageBox.warning(this.getResourceBundle().getText("deleteMessage"), {
+				title: this.getResourceBundle().getText("confirmDeleteTitle"),
+				actions: [MessageBox.Action.DELETE, MessageBox.Action.CANCEL],
+				onClose: function (oAction) {
+					if (oAction === MessageBox.Action.DELETE) {
+						reverse.forEach(function (index) {
+							this.getModel().deleteCreateEntry(aExistingModel[index]);
+							// this.getModel().remove(oTable.getContextByIndex(index).getPath());
+							aExistingModel.splice(index, 1);
+							aExistingEntries.splice(index, 1);
+						}.bind(this));
+						oAccountingModel.refresh(true);
+						oTable.unbindRows();
+						oTable.bindRows({
+							path: "tableView>/"
+						});
+						this._updateItemNumber();
+					}
+				}.bind(this)
+			});
 		},
 
 		onCompleteGeneralInfo: function (oEvent) {
 			this.getView().byId("idGeneralInformation").setNextStep("idAccountingData");
-			// this.onPressAdd();
+			this._create5LineItems();
 		},
 
-		onPressFileDeleted: function (oEvent) {
-			// this.deleteItemById(oEvent.getParameter("documentId"));
-			// MessageToast.show("FileDeleted event triggered.");
-		},
+		// onCompleteAccountingData: function (oEvent) {
+		// 	this.getModel("wizardView").setProperty("/isSubmitEnabled", true);
+		// },
 
 		onPressSetPrimary: function (oEvent) {
 			var oSetPrimary = this.byId("idUploadSupportingDocument").getSelectedItem(),
 				aDocuments = this.byId("idUploadSupportingDocument").getItems(),
 				sFileName = this.byId("idUploadSupportingDocument").getSelectedItem().getProperty("fileName");
-
-			this.getModel("wizardView").setProperty("/PrimaryIndicator", "");
 
 			if (oSetPrimary) {
 
@@ -414,7 +830,7 @@ sap.ui.define([
 
 				if (/([a-zA-Z0-9\s_\\.\-\(\):])+(.pdf)$/i.test(sFileName)) {
 					oSetPrimary.addStatus(this._oStatus);
-					this.getModel("wizardView").setProperty("/PrimaryIndicator", "X");
+					this.byId("idSubmitButton").setVisible(true);
 				} else {
 					MessageBox.error(this.getResourceBundle().getText("setPrimaryFileText"));
 					oSetPrimary.setSelected(false);
@@ -423,50 +839,145 @@ sap.ui.define([
 			}
 		},
 
-		onPressSubmit: function (oEvent) {
-			var oUploadCollection = this.byId("idUploadSupportingDocument");
-			var cFiles = oUploadCollection.getItems().length;
+		_isPrimaryFile: function (aFiles) {
+			var isSelected = false;
 
-			oUploadCollection.upload();
-			if (cFiles > 0) {
-
-				for (var i = 0; i < cFiles; i++) {
-					this.getModel().createEntry("/Document", {
-						properties: {
-							BatchID: this._getUUID(),
-							"PrimaryIndicator": "",
-							"FileContent": this.getModel("wizardView").getProperty("/BinaryFile"),
-							"ArchiveDocID": "",
-							"FileLength": 10278,
-							"FilePath": "/Desktop"
-
-						}
-					});
+			for (var i = 0; i < aFiles.length; i++) {
+				switch (aFiles[i].getStatuses().length) {
+				case 1:
+					return false;
+				case 0:
+					isSelected = true;
 				}
-			}
+			};
+		},
 
-			// this.onPressValidate();
-			this.getModel().submitChanges({
-				success: function () {
-					MessageBox.confirm("Payment request created successfully", {
-						title: this.getResourceBundle().getText("confirmTitle"),
-						onClose: function (oAction) {
-							if (oAction === MessageBox.Action.OK) {
-								this.getModel().resetChanges();
-								// this.getModel().refresh(true);
-								this._createEntry();
-								// this.getRouter().navTo("singlePayment", {
-								// 	BatchId: this._getUUID()
-								// }, true);
+		_setPrimaryFile: function (oFile) {
+			if (oFile.getStatuses()[0] !== undefined) {
+				return "X";
+			} else {
+				return "";
+			}
+		},
+
+		onPressSubmit: function (oEvent) {
+			this.getModel().setDeferredGroups(this.getModel().getDeferredGroups().concat(["Changes"]));
+			var oAccountingModel = this.getView().getModel("tableView"),
+				aExistingEntries = oAccountingModel.getData(),
+				oTable = this.byId("idLineItemsSmartTable").getTable(),
+				oUploadCollection = this.byId("idUploadSupportingDocument"),
+				aFiles = oUploadCollection.getItems(),
+				aDocuments = this.getModel("documentView").getData();
+
+			this.byId("idDynamicPage").setBusy(true);
+			if (isSelected) {
+				if (aFiles.length) {
+					aFiles.forEach(function (oFile) {
+						aDocuments.forEach(function (oDocument) {
+							// if (oFile.getFileName() === oDocument.FilePath) {
+							var sPrimaryFile = this._setPrimaryFile(oFile);
+
+							this.getModel().createEntry("/Document", {
+								groupId: "Changes",
+								properties: {
+									BatchID: oDocument.BatchID,
+									"PrimaryIndicator": sPrimaryFile,
+									"FileContent": oDocument.FileContent,
+									"ArchiveDocID": "",
+									"FileLength": oDocument.FileLength,
+									"FilePath": oDocument.FilePath
+
+								}
+							});
+							// }
+						}.bind(this));
+
+					}.bind(this));
+				}
+				if (this._oFormValidator.validate(this.byId("idGeneralInfo"))) {
+					this.getModel().submitChanges({
+						groupId: "Changes",
+						success: function (oData) {
+							this.byId("idDynamicPage").setBusy(false);
+							if (oData.__batchResponses[0].response.statusCode === "500") {
+								MessageBox.confirm("Payment request created successfully", {
+									title: this.getResourceBundle().getText("confirmTitle"),
+									onClose: function (oAction) {
+										if (oAction === MessageBox.Action.OK) {
+											this.getModel().resetChanges();
+											// this.getModel().refresh(true);
+											this._createEntry();
+											// this.getRouter().navTo("singlePayment", {
+											// 	BatchId: this._getUUID()
+											// }, true);
+										}
+									}.bind(this)
+								});
+							} else {
+								// if (oData.__batchResponses[0].response.statusCode === "400") {
+								this.getOwnerComponent().preventDefaultErrorHandler();
+								// this.getOwnerComponent().preventDefaultErrorHandler();
+								// 	var oErrorResponse = JSON.parse(oError.responseText);
+								// 	var sErrorMessage = oErrorResponse.error.innererror[0].message;
+								// 	MessageBox.error(
+								// 		sErrorMessage, {
+								// 			styleClass: "sapUiSizeCompact"
+								// 		});
+								// }.bind(this)
+								// JSON.parse(oData.__batchResponses[0].response.body).error.innererror.errordetails[0].message
+								var oErrorResponse = JSON.parse(oData.__batchResponses[0].response.body),
+									oErrorMessage = "";
+								this._aErrors = [];
+
+								// var sMessageBoxText = this.getResourceBundle().getText("errorTitle");
+								// this.addMessages(oError, sMessageBoxText);
+
+								var aErrorDetails = oErrorResponse.error.innererror.errordetails;
+								for (var i = 0; i < aErrorDetails.length; i++) {
+									oErrorMessage = aErrorDetails[i].message;
+									this._aErrors.push(oErrorMessage);
+								}
+
+								var aErrors = this._aErrors;
+								// aErrors.forEach(function (oError) {
+								for (var i = 0; i < aErrors.length; i++) {
+									if (/(?<=\D)\d+/.test(aErrors[i])) {
+										var sItemNumber = (/(?<=\D)\d+/.exec(aErrors[i])),
+											sUpdateItemNumber = sItemNumber[0];
+
+										aExistingEntries.forEach(function (oExistingEntry) {
+											if (oExistingEntry.ItemNumber == sUpdateItemNumber) {
+												oExistingEntry.CID = "Error"
+												var rowSettingsTemplate = new sap.ui.table.RowSettings({
+													highlight: "{tableView>CID}"
+												});
+
+												oTable.setRowSettingsTemplate(rowSettingsTemplate);
+											}
+										}.bind(this));
+
+										// aExistingEntries.forEach(function(oEntry){
+
+										// })
+
+									}
+								}
+
+								// MessageBox.error(oErrorMessage);
 							}
+
+						}.bind(this),
+						error: function () {
+							this.getOwnerComponent().preventDefaultErrorHandler();
 						}.bind(this)
 					});
-				}.bind(this)
-			});
+					this.getOwnerComponent().preventDefaultErrorHandler();
+				}
 
-			// if (this._oFormValidator.validate(this.byId("idGeneralInfo"))) {
-			// 	//TODO:Submit Changes
-			// }
+			} else {
+				MessageBox.error(this.getResourceBundle().getText("setPrimaryFileText"));
+			}
+
 		},
 
 		onSelectChange: function (oEvent) {
@@ -476,138 +987,56 @@ sap.ui.define([
 
 		onSelectAutoCalcTax: function (oEvent) {
 			if (oEvent.getParameters().value === true) {
-				this.getView().getModel("wizardView").setProperty("/isEnabledAutoCalcTax", true);
-			} else {
 				this.getView().getModel("wizardView").setProperty("/isEnabledAutoCalcTax", false);
+			} else {
+				this.getView().getModel("wizardView").setProperty("/isEnabledAutoCalcTax", true);
 			}
 		},
 
 		onSelectCredit: function (oEvent) {
-			var aLineItems = this.byId("idAccountingDataTable").getItems();
+			// var aLineItems = this.byId("idAccountingDataTable").getItems();
+			var sPath = oEvent.getSource().getBindingContext().sPath;
+			var aLineItems = this.getModel("tableView").getData();
+			var oTable = this.byId("idLineItemsSmartTable").getTable();
 
 			if (oEvent.getParameters().value === true) {
-				this.getView().getModel("wizardView").setProperty("/isEnabledCredit", true);
-				this.getView().getModel("wizardView").setProperty("/CreditDebit", "H");
+				this.getModel("wizardView").setProperty("/isEnabledCredit", true);
+				this.getModel("wizardView").setProperty("/CreditDebit", "H");
 				if (aLineItems.length) {
 					aLineItems.forEach(function (oLineItem) {
-						var sPath = oLineItem.getBindingContextPath();
-						this.getView().getModel().setProperty(sPath + "/CreditDebit", "H");
+						// var sPath = oLineItem._metadata.deepPath
+						// this.getView().getModel().setProperty(sPath + "/CreditDebit", "H");
+						// oTable.getColumns()[3].getTemplate().setSelectedKey("H")
+						oLineItem.CreditDebit = "H"
 					}.bind(this));
+					oTable.unbindRows();
+					oTable.bindRows({
+						path: "tableView>/"
+					});
 				}
 			} else {
 				this.getView().getModel("wizardView").setProperty("/isEnabledCredit", false);
 				this.getView().getModel("wizardView").setProperty("/CreditDebit", "S");
 				if (aLineItems.length) {
 					aLineItems.forEach(function (oLineItem) {
-						var sPath = oLineItem.getBindingContextPath();
-						this.getView().getModel().setProperty(sPath + "/CreditDebit", "S");
+						// var sPath = oLineItem._metadata.deepPath
+						// this.getView().getModel().setProperty(sPath + "/CreditDebit", "S");
+						// oTable.getColumns()[3].getTemplate().setSelectedKey("S")
+						oLineItem.CreditDebit = "S"
 					}.bind(this));
+
+					oTable.unbindRows();
+					oTable.bindRows({
+						path: "tableView>/"
+					});
 				}
+				this.getModel().setProperty(sPath + "/CmRefDat", null);
+				this.getModel().setProperty(sPath + "/CmRefNo", "");
 			}
 		},
 
 		onChange: function (oEvent) {
 			var oUploadCollection = oEvent.getSource();
-			// Header Token
-			var oCustomerHeaderToken = new UploadCollectionItem();
-
-			if (this.getModel("wizardView").getProperty("/isPDFFile")) {
-				if (/([a-zA-Z0-9\s_\\.\-\(\):])+(.pdf)$/i.test(oEvent.getParameter("files")[0].name)) {
-					this.getModel("wizardView").setProperty("/isPDFFile", false);
-					oCustomerHeaderToken.setSelected(true);
-					oCustomerHeaderToken.addStatus(this._oStatus);
-				}
-			}
-
-			if (oUploadCollection.getItems().length) {
-				this.getModel("wizardView").setProperty("/isSubmitEnabled", true);
-			} else {
-				this.getModel("wizardView").setProperty("/isSubmitEnabled", false);
-			}
-
-			var reader = new FileReader();
-			var file = oEvent.getParameter("files")[0];
-
-			reader.onload = function (e) {
-				var data = e.target.result;
-				var base64EncodedStr = btoa(unescape(encodeURIComponent(data)));
-				// var sBase64 = btoa(data);
-				this.getModel("wizardView").setProperty("/BinaryFile", base64EncodedStr);
-			}.bind(this);
-
-			reader.readAsBinaryString(file);
-
-			// var cFiles = oUploadCollection.getItems().length;
-
-			// if (cFiles > 0) {
-			// 	for (var i = 0; i < cFiles; i++) {
-
-			// 		this.getModel().metadataLoaded().then(function () {
-			// 			this.getModel().createEntry("/Document", {
-			// 				properties: {
-			// 					BatchID: this._getUUID(),
-			// 					"PrimaryIndicator": "",
-			// 					"FileContent": this.getModel("wizardView").getProperty("/BinaryFile"),
-			// 					"ArchiveDocID": "",
-			// 					"FileLength": 10278,
-			// 					"FilePath": "/Desktop"
-
-			// 				}
-			// 			});
-
-			// 			// this._bindView(oEntry.getPath());
-			// 		}.bind(this));
-
-			// 	}
-			// }
-
-			// // var that = this;
-			// var reader = new FileReader();
-
-			// reader.onload = function (e) {
-			// 	var raw = e.target.result;
-			// };
-
-			// reader.readAsBinaryString(file);
-
-		},
-
-		// handleExcelUpload: function (e) {
-		// 	this._import(e.getParameter("files") && e.getParameter("files")[0]);
-
-		// },
-
-		// _import: function (file) {
-
-		// 	if (file && window.FileReader) {
-
-		// 		var reader = new FileReader();
-
-		// 		var result = {},
-		// 			data;
-
-		// 		reader.onload = function (e) {
-		// 			data = e.target.result;
-		// 			var wb = XLSX.read(data, {
-		// 				type: 'binary'
-		// 			});
-		// 			wb.SheetNames.forEach(function (sheetName) {
-		// 				var roa = XLSX.utils.sheet_to_row_object_array(wb.Sheets[sheetName]);
-		// 				if (roa.length > 0) {
-		// 					result[sheetName] = roa;
-		// 				}
-		// 			});
-		// 			return result;
-		// 		}
-		// reader.readAsBinaryString(file);
-
-		// 	}
-
-		// },
-
-		onBeforeUploadStarts: function (oEvent) {
-			var oUploadCollection = oEvent.getSource();
-			// Header Token
 			var oCustomerHeaderToken = new UploadCollectionParameter({
 				name: "x-csrf-token",
 				value: "securityTokenFromModel"
@@ -616,144 +1045,90 @@ sap.ui.define([
 
 			var reader = new FileReader();
 			var file = oEvent.getParameter("files")[0];
-
-			//file.name
-			//file.size
-			// file.type
-
+			reader.fileName = file.name
 			reader.onload = function (e) {
 				var data = e.target.result;
-				var base64EncodedStr = btoa(unescape(encodeURIComponent(data)));
-				// var sBase64 = btoa(data);
-				this.getModel("wizardView").setProperty("/BinaryFile", base64EncodedStr);
+				var sBase64 = btoa(data);
+				var oProperties = {
+					BatchID: this._getUUID(),
+					FilePath: e.target.fileName,
+					FileContent: sBase64,
+					FileLength: e.total,
+				};
+				var aDocuments = this.getModel("documentView").getData(),
+					aItems = oUploadCollection.getItems();
+				aDocuments.push(oProperties);
+
+				aItems.forEach(function (oItem) {
+					oItem.attachDeletePress(this._onDeletePress, this);
+				}.bind(this));
+
+				for (var i = 0, j = aDocuments.length - 1; i < aDocuments.length; i++, j--) {
+					aItems[j].setDocumentId(aDocuments[i].BatchID);
+				}
+
+				// oUploadCollection.getItems()[0].attachDeletePress(this._onDeletePress, this);
+				// 	oUploadCollection.getItems()[0].addEventDelegate({
+				// 	fileDeleted: function (evt) {
+				// 		return;
+				// 	}
+				// });
 			}.bind(this);
 
 			reader.readAsBinaryString(file);
+
+			///////////////////////////////////////////////////////////////////////////////////////
+			// var oUploadCollection = oEvent.getSource();
+			// // Header Token
+			// var oCustomerHeaderToken = new UploadCollectionParameter({
+			// 	name: "x-csrf-token",
+			// 	value: "securityTokenFromModel"
+			// });
+			// oUploadCollection.addHeaderParameter(oCustomerHeaderToken);
+
 		},
 
-		onUploadComplete: function (oEvent) {
-			// var sUploadedFileName = oEvent.getParameter("files")[0].fileName;
+		_onDeletePress: function (oEvent) {
+			var aDocuments = this.getModel("documentView").getData();
+			var oUploadCollection = this.byId("idUploadSupportingDocument");
+			var aItems = oUploadCollection.getItems();
 
-			// var oUploadCollection = this.byId("UploadCollection");
-
-			// for (var i = 0; i < oUploadCollection.getItems().length; i++) {
-			// 	if (oUploadCollection.getItems()[i].getFileName() === sUploadedFileName) {
-			// 		oUploadCollection.removeItem(oUploadCollection.getItems()[i]);
-			// 		break;
-			// 	}
-			// }
+			for (var i = 0, j = aDocuments.length - 1; i < aDocuments.length; i++, j--) {
+				if (aDocuments[i].BatchID === oEvent.getSource().getDocumentId()) {
+					aDocuments.splice(i, 1);
+					oUploadCollection.removeItem(aItems[j]);
+				}
+			}
+			var isSelected = this._isPrimaryFile(aItems);
+			this.byId("idSubmitButton").setVisible(isSelected);
 		},
 
-		// onBeforeUploadStarts: function (oEvent) {
-		// 	var oDataModel = this.getOwnerComponent().getModel();
-		// 	var sTokenForUpload = oDataModel.getSecurityToken();
-		// 	var oFileUploader = this.byId("idUploadSupportingDocument");
-		// 	var oHeaderParameter = new sap.m.UploadCollectionParameter({
-		// 		name: "X-CSRF-Token",
-		// 		value: sTokenForUpload
-		// 	});
-		// 	//Header parameter need to be removed then added.
-		// 	oFileUploader.removeAllHeaderParameters();
-		// 	oFileUploader.addHeaderParameter(oHeaderParameter);
-		// var sUploadURL = oDataModel.sServiceUrl + "Document";
-		// oFileUploader.setUploadUrl(sUploadURL);
-		// var sHeaderParameterName = "Test";
-		// if (!oEvent.getParameters().getHeaderParameter(sHeaderParameterName) ) {
-		// 	var oHeaderParameter = new sap.m.UploadCollectionParameter({
-		// 		name: sHeaderParameterName,
-		// 		value: oEvent.getParameter("fileName")
-		// 	});
-		// 	oEvent.getParameters().addHeaderParameter(oHeaderParameter);
-		// }
-		// // var oCustomerHeaderSlug = new sap.m.UploadCollectionParameter({
-		// 	name: "slug",
-		// 	value: oEvent.getParameter("fileName")
-		// });
-		// oEvent.getParameters().addHeaderParameter(oCustomerHeaderSlug);
-
-		//  var oModel = this.getView().getModel();
-
-		// oModel.refreshSecurityToken();
-
-		// var oHeaders = oModel.oHeaders;
-
-		// var sToken = oHeaders['x-csrf-token'];
-
-		// var oCustomerHeaderToken = new sap.m.UploadCollectionParameter({
-
-		//  	name: "x-csrf-token",
-
-		//  	value: sToken
-
-		//  });
-		// oEvent.getParameters().addHeaderParameter(oCustomerHeaderToken);
-		// },
-
-		// onUploadComplete: function (oEvent) {
-		// 	// this.getView().getModel().refresh();
-		// 	var oUploadCollection = this.byId("idUploadSupportingDocument");
-		// 	var oData = oUploadCollection.getModel().getData();
-
-		// 	oData.items.unshift({
-		// 		"BatchId": this._getUUID(),
-		// 		"PrimaryIndicator": "",
-		// 		"ArchiveDocID": "",
-		// 		"FileLength": "",
-		// 		"FilePath": ""
-		// 	});
-		// 	this.getView().getModel().refresh();
-		// },
-
-		// onChange: function (oEvent) {
-		// 	var oUploadCollection = oEvent.getSource();
-		// 	// Header Token
-		// 	var oCustomerHeaderToken = new UploadCollectionParameter({
-		// 		name: "x-csrf-token",
-		// 		value: "securityTokenFromModel"
-		// 	});
-		// 	oUploadCollection.addHeaderParameter(oCustomerHeaderToken);
-		// },
+		onBeforeUploadStarts: function (oEvent) {
+			// Header Slug
+			var oCustomerHeaderSlug = new UploadCollectionParameter({
+				name: "slug",
+				value: oEvent.getParameter("fileName")
+			});
+			oEvent.getParameters().addHeaderParameter(oCustomerHeaderSlug);
+			MessageToast.show("BeforeUploadStarts event triggered.");
+		},
 
 		onActivateGeneralInfo: function (oEvent) {
-			// sap.m.MessageToast.show("Hi");
 			var oWizard = this.byId("idWizard");
 
-			// this.getModel().metadataLoaded(true).then(
-			// function(){
-			// 	if (this._oFormValidator.validate(this.byId("idGeneralInfo"))) {
-			// 	oWizard.validateStep(this.byId("idGeneralInformation"));
-			// 	// this.getView().byId("idGeneralInformation").setShowNextButton(true);
-
-			// } else {
-			// 	oWizard.invalidateStep(this.byId("idGeneralInformation"));
-
-			// }
-			// }.bind(this),
-			// function(){})
-
-			if (this._oFormValidator.validate(this.byId("idGeneralInfo"))) {
-				oWizard.validateStep(this.byId("idGeneralInformation"));
-				// this.getView().byId("idGeneralInformation").setShowNextButton(true);
-
+			// this.getModel().metadataLoaded().then(function () {
+			if (this.getView().getElementBinding()) {
+				if (this._oFormValidator.validate(this.byId("idGeneralInfo"))) {
+					oWizard.validateStep(this.byId("idGeneralInformation"));
+					// this.getView().byId("idGeneralInformation").setShowNextButton(true);
+				} else {
+					oWizard.invalidateStep(this.byId("idGeneralInformation"));
+				}
 			} else {
 				oWizard.invalidateStep(this.byId("idGeneralInformation"));
-
 			}
 
 		},
-
-		// onComplete: function (oEvent) {
-		// 	if (this._oFormValidator.validate(this.byId("idGeneralInfo"))) {
-		// 		this.getView().byId("idGeneralInformation").setNextStep("idAccountingData");
-		// 		this.getView().byId("idWizard").nextStep();
-
-		// 	} else {
-		// 		// this.getView().byId("idWizard").goToStep(this.byId("idGeneralInformation").getBindingContext().getObject());
-		// 		this.getView().byId("idWizard").previousStep();
-		// 	}
-
-		// },
-
 		// /* =========================================================== */
 		// /* internal methods                                            */
 		// /* =========================================================== */
@@ -817,6 +1192,7 @@ sap.ui.define([
 		_createEntry: function (oEvent) {
 			var oViewModel = this.getModel("wizardView");
 			var oEntry = this.getModel().createEntry("/GeneralInfo", {
+				groupId: "Changes",
 				properties: {
 					BatchID: this._getUUID()
 				},

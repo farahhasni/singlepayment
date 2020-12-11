@@ -83,7 +83,7 @@
 		<buttons>
 			<Button text="{i18n>clearLabel}" press=".onPressClear"/>
 			<Button text="{i18n>confirmLabel}" type="Emphasized" press=".onPressConfirm"/>
-			<Button text="{i18n>cancelLabel}" press=".onPressCancel"/>
+			<Button text="{i18n>cancelLabel}" press=".onPressCancelOneTimeVendor"/>
 		</buttons>
 	</Dialog>
 </core:FragmentDefinition>

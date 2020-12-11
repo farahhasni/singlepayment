@@ -52,6 +52,7 @@
 		}
 	},
 	"sap.ui5": {
+       "handleValidation": true,
 		"rootView": {
 			"viewName": "ee.com.finance.FI-112.view.App",
 			"type": "XML",
@@ -83,7 +84,8 @@
 			},
 			"": {
 				"settings": {
-					"defaultBindingMode": "TwoWay"
+					"defaultBindingMode": "TwoWay",
+					"useBatch": true
 				},
 				"dataSource": "mainService",
 				"preload": true
