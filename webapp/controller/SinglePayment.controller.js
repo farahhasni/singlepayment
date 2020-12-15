@@ -67,6 +67,9 @@ sap.ui.define([
 			this._oFormValidator = new FormValidator(this.getResourceBundle());
 
 			this.getView().setModel(this.getMessageManager().getMessageModel(), "messages");
+			this.getOwnerComponent().preventDefaultErrorHandler();
+			
+			// this.getOwnerComponent().getModel().setDeferredGroups(this.getOwnerComponent().getModel().getDeferredGroups().concat(["batchCreate", "batchCalculateTax"]));
 
 			// this.byId("idUploadSupportingDocument").addEventDelegate({
 			// 	fileDeleted: function (evt) {
@@ -333,10 +336,13 @@ sap.ui.define([
 			var oTable = this.byId("idLineItemsSmartTable").getTable(),
 				oAccountingModel = this.getView().getModel("tableView"),
 				aExistingEntries = oAccountingModel.getData(),
-				aExistingModel = this.getModel("tableModel").getData()
+				aExistingModel = this.getModel("tableModel").getData();
+				
+				if(typeof oProperties.Amount === "number"){
+					oProperties.Amount.toFixed(2);
+				}
 
 			var oEntry = this.getModel().createEntry("LineItem", {
-				groupId: "Changes",
 				properties: oProperties
 			} || {});
 
@@ -381,29 +387,29 @@ sap.ui.define([
 			var sPath = oEvent.getSource().getBindingContext().sPath
 			var sGrossAmount = this.byId("idGrossAmount").getValue().replace(",", "");
 
-			var aDeferredGroup = this.getModel().getDeferredGroups().push("batchCalculateTax");
-			this.getModel().setDeferredGroups(aDeferredGroup);
-			var mParameters = {
-				changedSetId: "batchCalculateTax"
-			};
+			// var aDeferredGroup = this.getModel().getDeferredGroups().push("batchCalculateTax");
+			// this.getModel().setDeferredGroups(aDeferredGroup);
+			// var mParameters = {
+			// 	changedSetId: "batchCalculateTax"
+			// };
 
 			this.getModel("wizardView").setProperty("/Path", sPath);
 
 			// if (this.getModel().hasPendingChanges()) {
-			aExistingEntries.forEach(function (oExistingEntry) {
+			aExistingEntries.forEach(function (oExistingEntry, iIndex , aArray) {
 				oExistingEntry.HDRSupplierNumber = this.byId("idSupplierNumber").getValue();
 				oExistingEntry.HDRCompanyCode = this.byId("idCompanyCode").getValue();
 				oExistingEntry.HDRGrossAmount = sGrossAmount;
 				oExistingEntry.CalcTaxAmount = "X";
 				this.getModel().create('/LineItem', oExistingEntry, {
-					changeSetId: "batchCalculateTax",
+					// groupId: "batchCalculateTax",
 					success: function (oData, response) {
 						var oMessage = response.headers["sap-message"];
 						if (oMessage) {
 							this.clearMessages();
 							var oMessageObject = JSON.parse(oMessage);
-							var sTax = oMessageObject.message;
-							this.byId("idTaxAmount").setValue(sTax.split(",")[0]);
+							var sTax = oMessageObject.message.split(":")[1];
+							this.byId("idTaxAmount").setValue(sTax.split(",")[0].trim());
 							// var sPath = this.getModel("wizardView").getProperty("/Path");
 
 							// this.getModel().setProperty(sPath + "/TaxAmount", sTax.replace(",", ""));
@@ -423,10 +429,12 @@ sap.ui.define([
 						oTable.bindRows({
 							path: "tableView>/"
 						});
-
+						
+						if (iIndex !== aArray.length - 1) {
+							this.clearMessages();
+						}
 					}.bind(this)
 				});
-
 			}.bind(this));
 		},
 
@@ -524,7 +532,7 @@ sap.ui.define([
 				sIndex = sPath.replace("/", ""),
 				sItemPath = this.getModel("tableModel").getData()[sIndex].sPath;
 
-			this.getModel().setProperty(sPath + "/Description", oEvent.getParameters().newValue);
+			this.getModel().setProperty(sItemPath + "/Description", oEvent.getParameters().newValue);
 
 		},
 		_onChangeCreditDebit: function (oEvent) {
@@ -532,49 +540,49 @@ sap.ui.define([
 				sIndex = sPath.replace("/", ""),
 				sItemPath = this.getModel("tableModel").getData()[sIndex].sPath;
 
-			this.getModel().setProperty(sPath + "/CreditDebit", oEvent.getSource().getSelectedItem().getKey());
+			this.getModel().setProperty(sItemPath + "/CreditDebit", oEvent.getSource().getSelectedItem().getKey());
 		},
 		_onChangeTaxCode: function (oEvent) {
 			var sPath = oEvent.getSource().getBindingInfo("value").binding.oContext.sPath,
 				sIndex = sPath.replace("/", ""),
 				sItemPath = this.getModel("tableModel").getData()[sIndex].sPath;
 
-			this.getModel().setProperty(sPath + "/Description", oEvent.getParameters().value);
+			this.getModel().setProperty(sItemPath + "/Description", oEvent.getParameters().value);
 		},
 		_onChangeCompanyCode: function (oEvent) {
 			var sPath = oEvent.getSource().getBindingInfo("value").binding.oContext.sPath,
 				sIndex = sPath.replace("/", ""),
 				sItemPath = this.getModel("tableModel").getData()[sIndex].sPath;
 
-			this.getModel().setProperty(sPath + "/CompanyCode", oEvent.getParameters().value);
+			this.getModel().setProperty(sItemPath + "/CompanyCode", oEvent.getParameters().value);
 		},
 		_onChangeGlAccount: function (oEvent) {
 			var sPath = oEvent.getSource().getBindingInfo("value").binding.oContext.sPath,
 				sIndex = sPath.replace("/", ""),
 				sItemPath = this.getModel("tableModel").getData()[sIndex].sPath;
 
-			this.getModel().setProperty(sPath + "/GlAccount", oEvent.getParameters().value);
+			this.getModel().setProperty(sItemPath + "/GlAccount", oEvent.getParameters().value);
 		},
 		_onChangeCostCenter: function (oEvent) {
 			var sPath = oEvent.getSource().getBindingInfo("value").binding.oContext.sPath,
 				sIndex = sPath.replace("/", ""),
 				sItemPath = this.getModel("tableModel").getData()[sIndex].sPath;
 
-			this.getModel().setProperty(sPath + "/CostCenter", oEvent.getParameters().value);
+			this.getModel().setProperty(sItemPath + "/CostCenter", oEvent.getParameters().value);
 		},
 		_onChangeProfitCenter: function (oEvent) {
 			var sPath = oEvent.getSource().getBindingInfo("value").binding.oContext.sPath,
 				sIndex = sPath.replace("/", ""),
 				sItemPath = this.getModel("tableModel").getData()[sIndex].sPath;
 
-			this.getModel().setProperty(sPath + "/ProfitCenter", oEvent.getParameters().value);
+			this.getModel().setProperty(sItemPath + "/ProfitCenter", oEvent.getParameters().value);
 		},
 		_onChangeWbsElement: function (oEvent) {
 			var sPath = oEvent.getSource().getBindingInfo("value").binding.oContext.sPath,
 				sIndex = sPath.replace("/", ""),
 				sItemPath = this.getModel("tableModel").getData()[sIndex].sPath;
 
-			this.getModel().setProperty(sPath + "/WbsElement", oEvent.getParameters().value);
+			this.getModel().setProperty(sItemPath + "/WbsElement", oEvent.getParameters().value);
 		},
 		onPressValidate: function () {
 			var oAccountingModel = this.getView().getModel("tableView"),
@@ -582,21 +590,21 @@ sap.ui.define([
 			var oTable = this.byId("idLineItemsSmartTable").getTable();
 			var sGrossAmount = this.byId("idGrossAmount").getValue().replace(",", "");
 
-			var aDeferredGroup = this.getModel().getDeferredGroups().push("batchCreate");
-			this.getModel().setDeferredGroups(aDeferredGroup);
-			var mParameters = {
-				groupId: "batchCreate"
-			};
+			// var aDeferredGroup = this.getModel().getDeferredGroups().push("batchCreate");
+			// this.getModel().setDeferredGroups(aDeferredGroup);
+			// var mParameters = {
+			// 	groupId: "batchCreate"
+			// };
 
-			// aExistingEntries.forEach(function (oExistingEntry) {
-			for (var i = 0; i < aExistingEntries.length; i++) {
+			aExistingEntries.forEach(function (oExistingEntry, iIndex, aArray) {
+			// for (var i = 0; i < aExistingEntries.length; i++) {
 				oExistingEntry.HDRSupplierNumber = this.byId("idSupplierNumber").getValue();
 				oExistingEntry.HDRCompanyCode = this.byId("idCompanyCode").getValue();
 				oExistingEntry.HDRGrossAmount = sGrossAmount;
 				// this.getModel().create('/LineItem', oExistingEntry, mParameters);
 
 				this.getModel().create('/LineItem', oExistingEntry, {
-					changeSetId: "batchCreate",
+					// groupId: "batchCreate",
 					success: function () {
 						sap.m.MessageToast.show("Success!");
 						aExistingEntries.forEach(function (oExistingEntry) {
@@ -612,7 +620,7 @@ sap.ui.define([
 					}.bind(this),
 					error: function (oError) {
 						this.getOwnerComponent().preventDefaultErrorHandler();
-						if (i == aExistingEntries.length) {
+						if (iIndex == aArray.length - 1) {
 							var oErrorResponse = JSON.parse(oError.responseText),
 								oErrorMessage = "";
 							this._aErrors = [];
@@ -642,16 +650,15 @@ sap.ui.define([
 									}.bind(this));
 								}
 							}
-						}
-						else{
+						} else {
 							this.clearMessages();
 						}
 
 					}.bind(this)
 				});
-			}
+			// }
 
-			// }.bind(this));
+			}.bind(this));
 
 			// this.getModel().submitChanges({
 			// 	groupId: "batchCreate",
@@ -787,7 +794,7 @@ sap.ui.define([
 				onClose: function (oAction) {
 					if (oAction === MessageBox.Action.DELETE) {
 						reverse.forEach(function (index) {
-							this.getModel().deleteCreateEntry(aExistingModel[index]);
+							this.getModel().deleteCreatedEntry(aExistingModel[index]);
 							// this.getModel().remove(oTable.getContextByIndex(index).getPath());
 							aExistingModel.splice(index, 1);
 							aExistingEntries.splice(index, 1);
@@ -804,6 +811,7 @@ sap.ui.define([
 		},
 
 		onCompleteGeneralInfo: function (oEvent) {
+			this.clearMessages();
 			this.getView().byId("idGeneralInformation").setNextStep("idAccountingData");
 			this._create5LineItems();
 		},
@@ -861,7 +869,8 @@ sap.ui.define([
 		},
 
 		onPressSubmit: function (oEvent) {
-			this.getModel().setDeferredGroups(this.getModel().getDeferredGroups().concat(["Changes"]));
+			// this.getModel().setDeferredGroups(this.getModel().getDeferredGroups().concat(["Changes"]));
+				// this.getModel().setDeferredGroups(this.getModel().getDeferredGroups());
 			var oAccountingModel = this.getView().getModel("tableView"),
 				aExistingEntries = oAccountingModel.getData(),
 				oTable = this.byId("idLineItemsSmartTable").getTable(),
@@ -869,8 +878,8 @@ sap.ui.define([
 				aFiles = oUploadCollection.getItems(),
 				aDocuments = this.getModel("documentView").getData();
 
-			this.byId("idDynamicPage").setBusy(true);
-			if (isSelected) {
+			// this.byId("idDynamicPage").setBusy(true);
+			// if (isSelected) {
 				if (aFiles.length) {
 					aFiles.forEach(function (oFile) {
 						aDocuments.forEach(function (oDocument) {
@@ -878,7 +887,6 @@ sap.ui.define([
 							var sPrimaryFile = this._setPrimaryFile(oFile);
 
 							this.getModel().createEntry("/Document", {
-								groupId: "Changes",
 								properties: {
 									BatchID: oDocument.BatchID,
 									"PrimaryIndicator": sPrimaryFile,
@@ -896,10 +904,10 @@ sap.ui.define([
 				}
 				if (this._oFormValidator.validate(this.byId("idGeneralInfo"))) {
 					this.getModel().submitChanges({
-						groupId: "Changes",
 						success: function (oData) {
+							this.getOwnerComponent().preventDefaultErrorHandler();
 							this.byId("idDynamicPage").setBusy(false);
-							if (oData.__batchResponses[0].response.statusCode === "500") {
+							if (oData.__batchResponses[0].response.statusCode === "201") {
 								MessageBox.confirm("Payment request created successfully", {
 									title: this.getResourceBundle().getText("confirmTitle"),
 									onClose: function (oAction) {
@@ -914,23 +922,13 @@ sap.ui.define([
 									}.bind(this)
 								});
 							} else {
-								// if (oData.__batchResponses[0].response.statusCode === "400") {
 								this.getOwnerComponent().preventDefaultErrorHandler();
-								// this.getOwnerComponent().preventDefaultErrorHandler();
-								// 	var oErrorResponse = JSON.parse(oError.responseText);
-								// 	var sErrorMessage = oErrorResponse.error.innererror[0].message;
-								// 	MessageBox.error(
-								// 		sErrorMessage, {
-								// 			styleClass: "sapUiSizeCompact"
-								// 		});
-								// }.bind(this)
-								// JSON.parse(oData.__batchResponses[0].response.body).error.innererror.errordetails[0].message
+		
 								var oErrorResponse = JSON.parse(oData.__batchResponses[0].response.body),
 									oErrorMessage = "";
 								this._aErrors = [];
 
-								// var sMessageBoxText = this.getResourceBundle().getText("errorTitle");
-								// this.addMessages(oError, sMessageBoxText);
+				
 
 								var aErrorDetails = oErrorResponse.error.innererror.errordetails;
 								for (var i = 0; i < aErrorDetails.length; i++) {
@@ -939,7 +937,7 @@ sap.ui.define([
 								}
 
 								var aErrors = this._aErrors;
-								// aErrors.forEach(function (oError) {
+					
 								for (var i = 0; i < aErrors.length; i++) {
 									if (/(?<=\D)\d+/.test(aErrors[i])) {
 										var sItemNumber = (/(?<=\D)\d+/.exec(aErrors[i])),
@@ -956,14 +954,11 @@ sap.ui.define([
 											}
 										}.bind(this));
 
-										// aExistingEntries.forEach(function(oEntry){
-
-										// })
+						
 
 									}
 								}
 
-								// MessageBox.error(oErrorMessage);
 							}
 
 						}.bind(this),
@@ -974,9 +969,9 @@ sap.ui.define([
 					this.getOwnerComponent().preventDefaultErrorHandler();
 				}
 
-			} else {
-				MessageBox.error(this.getResourceBundle().getText("setPrimaryFileText"));
-			}
+			// } else {
+			// 	MessageBox.error(this.getResourceBundle().getText("setPrimaryFileText"));
+			// }
 
 		},
 
@@ -1192,7 +1187,6 @@ sap.ui.define([
 		_createEntry: function (oEvent) {
 			var oViewModel = this.getModel("wizardView");
 			var oEntry = this.getModel().createEntry("/GeneralInfo", {
-				groupId: "Changes",
 				properties: {
 					BatchID: this._getUUID()
 				},

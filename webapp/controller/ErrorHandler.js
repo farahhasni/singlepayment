@@ -45,7 +45,7 @@ sap.ui.define([
 		 */
 		_showServiceError: function (sDetails) {
 			if (this._isPreventDefaultErrorHandler) {
-				this._isPreventDefaultErrorHandler = false;
+				// this._isPreventDefaultErrorHandler = false;
 				return;
 			}
 			if (this._bMessageOpen) {
